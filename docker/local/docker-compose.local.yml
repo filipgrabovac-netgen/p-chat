@@ -8,11 +8,13 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+      - /app/__pycache__
+      - /app/.venv
     environment:
       - DEBUG=1
       - DJANGO_SETTINGS_MODULE=settings.local
       - PYTHONPATH=/app/src
-    command: uv run python manage.py runserver
+    command: uv run python manage.py runserver 0.0.0.0:8000
 
   frontend:
     build:

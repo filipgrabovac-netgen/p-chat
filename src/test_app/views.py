@@ -1,3 +1,7 @@
-from django.shortcuts import render
+from rest_framework.response import Response
 
-# Create your views here.
+
+@action(detail=False, methods=['get'], url_path='')
+def home(request):
+    print("We are on server!!")
+    return Response("Hello, World!")
