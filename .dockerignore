@@ -5,6 +5,10 @@ README.md
 .venv
 **/.venv/
 **/.venv
+.venv-docker/
+.venv-docker
+**/.venv-docker/
+**/.venv-docker
 __pycache__/
 *.pyc
 *.pyo

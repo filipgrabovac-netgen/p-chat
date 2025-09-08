@@ -7,8 +7,12 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
-      - /app/node_modules
+      - ./src:/app/src
+      - ./manage.py:/app/manage.py
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./uv.lock:/app/uv.lock
+      - /app/__pycache__
+      - /app/.venv-docker
     environment:
       - DEBUG=0
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/project_template
