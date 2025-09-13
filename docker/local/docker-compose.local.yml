@@ -16,6 +16,7 @@ services:
       - DEBUG=1
       - DJANGO_SETTINGS_MODULE=settings.local
       - PYTHONPATH=/app/src
+      - DATABASE_URL=${DATABASE_URL}
     command: uv run python manage.py runserver 0.0.0.0:8000
 
   frontend:

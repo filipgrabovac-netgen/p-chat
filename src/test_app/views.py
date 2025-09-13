@@ -1,7 +1,6 @@
+from rest_framework.views import APIView
 from rest_framework.response import Response
 
-
-@action(detail=False, methods=['get'], url_path='')
-def home(request):
-    print("We are on server!!")
-    return Response("Hello, World!")
+class DummyView(APIView):
+    def get(self, request):
+        return Response("Hello, World!")
