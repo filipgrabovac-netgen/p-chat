@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class TestAppConfig(AppConfig):
+class AwsLlmConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'test_app'
+    name = 'aws_llm'

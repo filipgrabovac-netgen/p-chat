@@ -25,3 +25,7 @@ prod-build:
 prod-rebuild:	
 	docker compose -f docker/prod/docker-compose.prod.yml --project-directory . down
 	docker compose -f docker/prod/docker-compose.prod.yml --project-directory . build
+
+schema:
+	rm -rf ./app/schema/schema.d.ts
+	pnpm dlx openapi-typescript http://0.0.0.0:8000/api/schema/ -o ./app/schema/schema.d.ts
