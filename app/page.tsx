@@ -1,8 +1,11 @@
 "use client";
 import { ChatContainer } from "./components";
+import { LoadingScreen } from "./components/LoadingScreen";
 import { useChat } from "./hooks/useChat.hook";
+import { useLoadingScreen } from "./hooks/useLoadingScreen.hook";
 
 export default function Home() {
+  const { showLoading, handleLoadingComplete } = useLoadingScreen(3000);
   const {
     messages,
     inputValue,
@@ -14,6 +17,10 @@ export default function Home() {
     handleSendMessage,
     handleKeyPress,
   } = useChat();
+
+  if (showLoading) {
+    return <LoadingScreen onComplete={handleLoadingComplete} />;
+  }
 
   return (
     <ChatContainer

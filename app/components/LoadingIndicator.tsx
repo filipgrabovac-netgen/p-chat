@@ -16,25 +16,25 @@ export const LoadingIndicator = ({
           <div className="flex space-x-1">
             <div
               className={`w-3 h-3 rounded-full animate-bounce ${
-                isResponding ? "bg-[#2176FF]" : "bg-gray-400"
+                isResponding ? "bg-slate-600" : "bg-slate-400"
               }`}
             ></div>
             <div
               className={`w-3 h-3 rounded-full animate-bounce ${
-                isResponding ? "bg-[#2176FF]" : "bg-gray-400"
+                isResponding ? "bg-slate-600" : "bg-slate-400"
               }`}
               style={{ animationDelay: "0.1s" }}
             ></div>
             <div
               className={`w-3 h-3 rounded-full animate-bounce ${
-                isResponding ? "bg-[#2176FF]" : "bg-gray-400"
+                isResponding ? "bg-slate-600" : "bg-slate-400"
               }`}
               style={{ animationDelay: "0.2s" }}
             ></div>
           </div>
           <span
             className={`text-sm font-medium ${
-              isResponding ? "text-[#2176FF]" : "text-gray-500"
+              isResponding ? "text-slate-600" : "text-slate-500"
             }`}
           >
             {message}
