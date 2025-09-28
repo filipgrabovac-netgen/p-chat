@@ -51,10 +51,10 @@ export interface components {
         /** @description Serializer for chat conversations */
         ChatConversation: {
             readonly id: number;
-            readonly messages: string;
+            readonly user_id: number;
             /** Format: date-time */
             readonly created_at: string;
-            user: number;
+            readonly messages: string;
         };
         /** @description Serializer for incoming chat requests */
         ChatRequestRequest: {

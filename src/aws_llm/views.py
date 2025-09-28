@@ -147,7 +147,7 @@ class ChatResponseView(APIView):
             logger.error(f"Error processing chat request: {str(e)}")
             
             error_data = {
-                'error': 'Internal server error',
+                'error': 'Internal server error', 
                 'details': str(e),
                 'timestamp': timezone.now()
             }
@@ -196,16 +196,11 @@ class ChatHistoryView(APIView):
                 })
             
             # Format conversation data
-            conversation_data = {
-                'id': conversation.id,
-                'user_id': conversation.user_id,
-                'created_at': conversation.created_at,
-                'messages': message_data,
-                'message_count': len(message_data)
-            }
+            # Use the serializer to format the response
+            conversation_serializer = ChatConversationSerializer(conversation)
             
             response_data = {
-                'conversation': conversation_data,
+                'conversation': conversation_serializer.data,
                 'timestamp': timezone.now(),
                 'success': True
             }

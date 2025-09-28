@@ -17,8 +17,10 @@ export const useChat = () => {
   const { mutate: postPrompt } = usePostPrompt();
   const { data: messagesHistory } = useGetConversation();
   useEffect(() => {
-    setMessages(messagesHistory);
-    console.log(messagesHistory);
+    if (messagesHistory && messagesHistory.length > 0) {
+      setMessages(messagesHistory);
+      console.log("Loaded conversation history:", messagesHistory);
+    }
   }, [messagesHistory]);
 
   const scrollToBottom = () => {

@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from .models import ChatMessage
 
 from aws_llm.models import ChatConversation
 
@@ -115,8 +116,21 @@ class ChatConversationSerializer(serializers.ModelSerializer):
     """
     Serializer for chat conversations
     """
+    messages = serializers.SerializerMethodField()
+    
     class Meta:
         model = ChatConversation
-        fields = '__all__'
-
-    messages = serializers.SerializerMethodField()
+        fields = ['id', 'user_id', 'created_at', 'messages']
+    
+    def get_messages(self, obj):
+        """Get all messages for this conversation"""
+        messages = ChatMessage.objects.filter(conversation=obj).order_by('created_at')
+        return [
+            {
+                'id': msg.id,
+                'role': msg.role,
+                'content': msg.message,
+                'timestamp': msg.created_at,
+            }
+            for msg in messages
+        ]
