@@ -5,3 +5,4 @@ export { ChatInput } from "./ChatInput";
 export { ChatContainer } from "./ChatContainer";
 export { LoadingIndicator } from "./LoadingIndicator";
 export { LoadingScreen } from "./LoadingScreen";
+export { ConversationsSidebar } from "./ConversationsSidebar";

@@ -14,6 +14,7 @@ interface ChatContainerProps {
   onSendMessage: () => void;
   onKeyPress: (e: React.KeyboardEvent) => void;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
+  messagesEndRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export const ChatContainer = ({
@@ -26,6 +27,7 @@ export const ChatContainer = ({
   onSendMessage,
   onKeyPress,
   inputRef,
+  messagesEndRef,
 }: ChatContainerProps) => {
   return (
     <div className="flex flex-col h-screen bg-white font-sans">
@@ -36,6 +38,7 @@ export const ChatContainer = ({
         isLoading={isLoading}
         typingMessageId={typingMessageId}
         typingText={typingText}
+        messagesEndRef={messagesEndRef}
       />
 
       <ChatInput

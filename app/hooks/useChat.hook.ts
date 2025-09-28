@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { usePostPrompt } from "./usePostPrompt.hook";
 
 import { Message } from "../types/chat";
@@ -16,25 +16,84 @@ export const useChat = () => {
 
   const { mutate: postPrompt } = usePostPrompt();
   const { data: messagesHistory } = useGetConversation();
+
+  const scrollToBottom = useCallback(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+
+    // Alternative scroll method as fallback
+    setTimeout(() => {
+      const chatContainer = document.querySelector(".flex-1.overflow-y-auto");
+      if (chatContainer) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+    }, 50);
+  }, []);
+
   useEffect(() => {
     if (messagesHistory && messagesHistory.length > 0) {
       setMessages(messagesHistory);
-      console.log("Loaded conversation history:", messagesHistory);
+      // Scroll to bottom after loading history with multiple attempts
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+      setTimeout(() => {
+        scrollToBottom();
+      }, 300);
+      setTimeout(() => {
+        scrollToBottom();
+      }, 500);
+      setTimeout(() => {
+        scrollToBottom();
+      }, 1000);
+      setTimeout(() => {
+        scrollToBottom();
+      }, 2000);
     }
-  }, [messagesHistory]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, [messagesHistory, scrollToBottom]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, typingText]);
+    if (messages && messages.length > 0) {
+      scrollToBottom();
+      // Additional scroll attempts for initial load
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+      setTimeout(() => {
+        scrollToBottom();
+      }, 500);
+    }
+  }, [messages, typingText, scrollToBottom]);
 
-  // Focus input on component mount
+  // Focus input on component mount and scroll to bottom
   useEffect(() => {
     inputRef.current?.focus();
-  }, []);
+
+    // Scroll to bottom when component first mounts (after loading screen)
+    setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+    setTimeout(() => {
+      scrollToBottom();
+    }, 300);
+    setTimeout(() => {
+      scrollToBottom();
+    }, 1000);
+
+    // Use MutationObserver to detect DOM changes and scroll
+    const observer = new MutationObserver(() => {
+      scrollToBottom();
+    });
+
+    // Observe the chat container for changes
+    const chatContainer = document.querySelector(".flex-1.overflow-y-auto");
+    if (chatContainer) {
+      observer.observe(chatContainer, { childList: true, subtree: true });
+    }
+
+    return () => observer.disconnect();
+  }, [scrollToBottom]);
 
   // Typewriter effect for assistant messages
   useEffect(() => {
@@ -79,6 +138,11 @@ export const useChat = () => {
     setInputValue("");
     setIsLoading(true);
 
+    // Scroll to bottom after adding user message
+    setTimeout(() => {
+      scrollToBottom();
+    }, 50);
+
     // Focus the input field after sending message
     setTimeout(() => {
       inputRef.current?.focus();
@@ -98,6 +162,11 @@ export const useChat = () => {
         setMessages((prev) => [...(prev || []), assistantMessage]);
         setTypingMessageId(assistantMessageId);
         setIsLoading(false);
+
+        // Scroll to bottom after adding assistant message
+        setTimeout(() => {
+          scrollToBottom();
+        }, 50);
       },
       onError: (error) => {
         console.error("Error sending message:", error);

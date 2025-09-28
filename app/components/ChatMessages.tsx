@@ -8,6 +8,7 @@ interface ChatMessagesProps {
   isLoading: boolean;
   typingMessageId: string | null;
   typingText: string;
+  messagesEndRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export const ChatMessages = ({
@@ -15,6 +16,7 @@ export const ChatMessages = ({
   isLoading,
   typingMessageId,
   typingText,
+  messagesEndRef,
 }: ChatMessagesProps) => {
   return (
     <div className="flex-1 overflow-y-auto px-6 py-8 bg-gradient-to-b from-slate-50 to-white">
@@ -38,7 +40,7 @@ export const ChatMessages = ({
 
         {isLoading && <LoadingIndicator />}
 
-        <div id="messages-end" />
+        <div ref={messagesEndRef} />
       </div>
     </div>
   );
