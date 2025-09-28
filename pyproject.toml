@@ -20,4 +20,5 @@ dependencies = [
     "langchain-google-genai>=2.1.10",
     "dotenv>=0.9.9",
     "drf-spectacular>=0.28.0",
+    "dj-database-url>=3.0.1",
 ]

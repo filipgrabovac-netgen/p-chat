@@ -1,4 +1,21 @@
 services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=pchat_local
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST=localhost
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       target: be-dev
@@ -16,8 +33,11 @@ services:
       - DEBUG=1
       - DJANGO_SETTINGS_MODULE=settings.local
       - PYTHONPATH=/app/src
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/pchat_local
     command: uv run python manage.py runserver 0.0.0.0:8000
+    depends_on:
+      db:
+        condition: service_healthy
 
   frontend:
     build:
@@ -33,3 +53,6 @@ services:
       - NODE_ENV=development
       - NEXT_PUBLIC_API_URL=http://localhost:8000
     command: pnpm run dev
+
+volumes:
+  postgres_data:

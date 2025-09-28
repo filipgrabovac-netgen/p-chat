@@ -24,7 +24,7 @@ export default function Home() {
 
   return (
     <ChatContainer
-      messages={messages}
+      messages={messages || []}
       inputValue={inputValue}
       isLoading={isLoading}
       typingMessageId={typingMessageId}

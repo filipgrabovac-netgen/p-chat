@@ -1,5 +1,27 @@
 from rest_framework import serializers
 
+from aws_llm.models import ChatConversation
+
+
+class MessageSerializer(serializers.Serializer):
+    """
+    Serializer for individual messages in conversation
+    """
+    role = serializers.ChoiceField(
+        choices=['user', 'assistant'],
+        help_text="The role of the message sender"
+    )
+    content = serializers.CharField(
+        max_length=4000,
+        help_text="The content of the message"
+    )
+
+    def validate_content(self, value):
+        """Validate that the content is not empty"""
+        if not value.strip():
+            raise serializers.ValidationError("Message content cannot be empty")
+        return value.strip()
+
 
 class ChatRequestSerializer(serializers.Serializer):
     """
@@ -7,7 +29,8 @@ class ChatRequestSerializer(serializers.Serializer):
     """
     message = serializers.CharField(
         max_length=4000,
-        help_text="The user's message to the AI assistant"
+        required=False,
+        help_text="The user's message to the AI assistant (legacy field)"
     )
     model = serializers.CharField(
         max_length=100,
@@ -20,6 +43,31 @@ class ChatRequestSerializer(serializers.Serializer):
         default=False,
         help_text="Whether to stream the response"
     )
+
+    def validate(self, data):
+        """Validate that either message or messages is provided, but not both"""
+        message = data.get('message')
+        messages = data.get('messages')
+        
+        if not message and not messages:
+            raise serializers.ValidationError("Either 'message' or 'messages' must be provided")
+        
+        if message and messages:
+            raise serializers.ValidationError("Cannot provide both 'message' and 'messages'")
+        
+        if message:
+            if not message.strip():
+                raise serializers.ValidationError("Message cannot be empty")
+            data['message'] = message.strip()
+        
+        if messages:
+            if not messages:
+                raise serializers.ValidationError("Messages list cannot be empty")
+            # Ensure the last message is from the user
+            if messages[-1]['role'] != 'user':
+                raise serializers.ValidationError("Last message must be from user")
+        
+        return data
 
     def validate_message(self, value):
         """Validate that the message is not empty"""
@@ -60,3 +108,15 @@ class ErrorResponseSerializer(serializers.Serializer):
     timestamp = serializers.DateTimeField(
         help_text="When the error occurred"
     )
+
+
+
+class ChatConversationSerializer(serializers.ModelSerializer):
+    """
+    Serializer for chat conversations
+    """
+    class Meta:
+        model = ChatConversation
+        fields = '__all__'
+
+    messages = serializers.SerializerMethodField()

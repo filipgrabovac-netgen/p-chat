@@ -1,4 +1,32 @@
 services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=pchat_prod
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   backend:
     build:
       context: .
@@ -15,10 +43,15 @@ services:
       - /app/.venv-docker
     environment:
       - DEBUG=0
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/project_template
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/pchat_prod
       - REDIS_URL=redis://redis:6379/0
       - DJANGO_SETTINGS_MODULE=settings.prod
     command: uv run python manage.py runserver
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   frontend:
     build:
@@ -35,3 +68,7 @@ services:
       - NODE_ENV=production
     depends_on:
       - backend
+
+volumes:
+  postgres_data:
+  redis_data:

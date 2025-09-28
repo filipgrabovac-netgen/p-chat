@@ -2,16 +2,11 @@ import { useState, useRef, useEffect } from "react";
 import { usePostPrompt } from "./usePostPrompt.hook";
 
 import { Message } from "../types/chat";
+import { useGetConversation } from "./useGetConversation.hook";
 
 export const useChat = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      content: "Hello! I'm your AI assistant. How can I help you today?",
-      role: "assistant",
-      timestamp: new Date().toISOString(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>();
+
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [typingMessageId, setTypingMessageId] = useState<string | null>(null);
@@ -20,6 +15,11 @@ export const useChat = () => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const { mutate: postPrompt } = usePostPrompt();
+  const { data: messagesHistory } = useGetConversation();
+  useEffect(() => {
+    setMessages(messagesHistory);
+    console.log(messagesHistory);
+  }, [messagesHistory]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -38,7 +38,7 @@ export const useChat = () => {
   useEffect(() => {
     if (!typingMessageId) return;
 
-    const message = messages.find((m) => m.id === typingMessageId);
+    const message = messages?.find((m) => m.id === typingMessageId);
     if (!message || message.role !== "assistant") return;
 
     const fullText = message.content;
@@ -73,7 +73,7 @@ export const useChat = () => {
       timestamp: new Date().toISOString(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages((prev) => [...(prev || []), userMessage]);
     setInputValue("");
     setIsLoading(true);
 
@@ -87,13 +87,13 @@ export const useChat = () => {
         const assistantMessageId = Date.now().toString();
         const assistantMessage: Message = {
           id: assistantMessageId,
-          content: response.response,
+          content: response?.response || "",
           role: "assistant",
           timestamp: new Date().toISOString(),
         };
 
         // Add the message with full content
-        setMessages((prev) => [...prev, assistantMessage]);
+        setMessages((prev) => [...(prev || []), assistantMessage]);
         setTypingMessageId(assistantMessageId);
         setIsLoading(false);
       },

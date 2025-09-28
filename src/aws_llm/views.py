@@ -4,11 +4,11 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.utils import timezone
 import logging
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
-from drf_spectacular.types import OpenApiTypes
-
+from drf_spectacular.utils import extend_schema, OpenApiExample
+from aws_llm.models import ChatConversation, ChatMessage
 from aws_llm.utils.llm_wrapper import AWSLLMWrapper
 from aws_llm.serializers import (
+    ChatConversationSerializer,
     ChatRequestSerializer, 
     ChatResponseSerializer, 
     ErrorResponseSerializer
@@ -65,6 +65,7 @@ class ChatResponseView(APIView):
         """
         # Validate incoming request
         request_serializer = ChatRequestSerializer(data=request.data)
+        conversation = ChatConversation.objects.get(id=1, user_id=1)
         
         if not request_serializer.is_valid():
             error_serializer = ErrorResponseSerializer(data={
@@ -84,22 +85,54 @@ class ChatResponseView(APIView):
             # Initialize AWS LLM client
             client = AWSLLMWrapper(model=model, stream=stream)
             
-            # Get response from AWS LLM
+            # Get conversation history and convert to list format
+            message_queryset = ChatMessage.objects.filter(conversation=conversation).order_by('created_at')
+            messages = []
+            for msg in message_queryset:
+                messages.append({
+                    'role': msg.role,
+                    'content': msg.message
+                })
+            
+            # Add the new user message
+            messages.append({
+                'role': 'user',
+                'content': message
+            })
+            
+            # Get response from AWS LLM with conversation history
             if stream:
-                # Handle streaming response
-                response_generator = client.invoke(message)
+                # Handle streaming response with history
+                response_generator = client.invoke_with_history(messages)
                 response_text = ''.join(response_generator)
             else:
-                # Handle non-streaming response
-                response_generator = client.invoke(message)
+                # Handle non-streaming response with history
+                response_generator = client.invoke_with_history(messages)
                 response_text = next(response_generator)
+            
+            # Save the new user message to database
+            user_message = ChatMessage.objects.create(
+                conversation=conversation,
+                message=message,
+                role='user'
+            )
+            
+            # Save the assistant response to database
+            assistant_message = ChatMessage.objects.create(
+                conversation=conversation,
+                message=response_text,
+                role='assistant'
+            )
             
             # Create response data
             response_data = {
                 'response': response_text,
                 'model_used': model,
                 'timestamp': timezone.now(),
-                'success': True
+                'success': True,
+                'conversation_id': conversation.id,
+                'user_message_id': user_message.id,
+                'assistant_message_id': assistant_message.id
             }
             
             # Validate response data
@@ -118,6 +151,87 @@ class ChatResponseView(APIView):
                 'details': str(e),
                 'timestamp': timezone.now()
             }
+            
+            error_serializer = ErrorResponseSerializer(data=error_data)
+            error_serializer.is_valid()
+            return Response(error_serializer.data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+class ChatHistoryView(APIView):
+    """
+    REST API endpoint to retrieve conversation history
+    """ 
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        summary='Get chat history',
+        description='Get chat history for a user',
+        responses={
+            200: ChatConversationSerializer,
+            404: ErrorResponseSerializer,
+        },
+        tags=['Chat']
+    )
+    def get(self, request):
+        """
+        Handle GET requests for conversation history
+        Returns only conversation with user_id=1 and conversation_id=1
+        """
+        try:
+            # Get specific conversation with user_id=1 and conversation_id=1
+            conversation = ChatConversation.objects.get(id=1, user_id=1)
+            
+            # Get all messages for this specific conversation
+            messages = ChatMessage.objects.filter(conversation=conversation).order_by('created_at')
+            
+            # Format messages for response
+            message_data = []
+            for msg in messages:
+                message_data.append({
+                    'id': msg.id,
+                    'role': msg.role,
+                    'content': msg.message,
+                    'timestamp': msg.created_at,
+                })
+            
+            # Format conversation data
+            conversation_data = {
+                'id': conversation.id,
+                'user_id': conversation.user_id,
+                'created_at': conversation.created_at,
+                'messages': message_data,
+                'message_count': len(message_data)
+            }
+            
+            response_data = {
+                'conversation': conversation_data,
+                'timestamp': timezone.now(),
+                'success': True
+            }
+            
+            return Response(response_data, status=status.HTTP_200_OK)
+            
+        except ChatConversation.DoesNotExist:
+            error_data = {
+                'error': 'Conversation not found',
+                'details': 'Conversation with ID 1 and user ID 1 does not exist',
+                'timestamp': timezone.now()
+            }
+            error_serializer = ErrorResponseSerializer(data=error_data)
+            error_serializer.is_valid()
+            return Response(error_serializer.data, status=status.HTTP_404_NOT_FOUND)
+            
+        except Exception as e:
+            logger.error(f"Error retrieving conversation history: {str(e)}")
+            
+            error_data = {
+                'error': 'Internal server error',
+                'details': str(e),
+                'timestamp': timezone.now()
+            }
+
+            print(e)
             
             error_serializer = ErrorResponseSerializer(data=error_data)
             error_serializer.is_valid()
