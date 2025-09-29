@@ -1,16 +1,37 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { usePostPrompt } from "./usePostPrompt.hook";
 import { useConversationMessages } from "./useConversationMessages.hook";
+import { useConversationLoading } from "../contexts/ConversationLoadingContext";
 import { Message } from "../types/chat";
 
-export const useConversationChat = (conversationId?: number) => {
+export const useConversationChat = (
+  conversationId?: number,
+  isActive: boolean = false
+) => {
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [typingMessageId, setTypingMessageId] = useState<string | null>(null);
-  const [typingText, setTypingText] = useState("");
+  const [localTypingText, setLocalTypingText] = useState("");
+  const [pendingRequestConversationId, setPendingRequestConversationId] =
+    useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const { setLoadingState, getLoadingState } = useConversationLoading();
+  const loadingState = conversationId
+    ? getLoadingState(conversationId)
+    : { isLoading: false, typingMessageId: null, typingText: "" };
+
+  const stableSetLoadingState = useCallback(
+    (
+      id: number,
+      state: Partial<{
+        isLoading: boolean;
+        typingMessageId: string | null;
+        typingText: string;
+      }>
+    ) => setLoadingState(id, state),
+    [setLoadingState]
+  );
 
   const { mutate: postPrompt } = usePostPrompt(conversationId);
   const {
@@ -51,6 +72,18 @@ export const useConversationChat = (conversationId?: number) => {
     [backendMessages, localMessages]
   );
 
+  // Clear local messages when conversation changes, but only if we're not in the middle of a request
+  useEffect(() => {
+    // Clear pending request tracking when conversation changes
+    setPendingRequestConversationId(null);
+
+    // Only clear if we're not currently loading (no pending request)
+    if (!loadingState.isLoading) {
+      setLocalMessages([]);
+      setLocalTypingText("");
+    }
+  }, [conversationId, loadingState.isLoading]);
+
   useEffect(() => {
     if (allMessages && allMessages.length > 0) {
       scrollToBottom();
@@ -62,7 +95,7 @@ export const useConversationChat = (conversationId?: number) => {
         scrollToBottom();
       }, 500);
     }
-  }, [allMessages, typingText, scrollToBottom]);
+  }, [allMessages, localTypingText, scrollToBottom]);
 
   // Focus input on component mount and scroll to bottom
   useEffect(() => {
@@ -95,23 +128,34 @@ export const useConversationChat = (conversationId?: number) => {
 
   // Typewriter effect for assistant messages
   useEffect(() => {
-    if (!typingMessageId) return;
+    if (!loadingState.typingMessageId || !conversationId) {
+      setLocalTypingText("");
+      return;
+    }
 
-    const message = allMessages?.find((m) => m.id === typingMessageId);
-    if (!message || message.role !== "assistant") return;
+    const message = allMessages?.find(
+      (m) => m.id === loadingState.typingMessageId
+    );
+    if (!message || message.role !== "assistant") {
+      setLocalTypingText("");
+      return;
+    }
 
     const fullText = message.content;
     let currentIndex = 0;
-    setTypingText("");
+    setLocalTypingText("");
 
     const typeInterval = setInterval(() => {
       if (currentIndex < fullText.length) {
-        setTypingText(fullText.slice(0, currentIndex + 1));
+        setLocalTypingText(fullText.slice(0, currentIndex + 1));
         currentIndex++;
       } else {
         clearInterval(typeInterval);
-        setTypingMessageId(null);
-        setTypingText("");
+        setLocalTypingText("");
+        stableSetLoadingState(conversationId, {
+          typingMessageId: null,
+          typingText: "",
+        });
         // Focus the input field after typing is complete
         setTimeout(() => {
           inputRef.current?.focus();
@@ -120,10 +164,24 @@ export const useConversationChat = (conversationId?: number) => {
     }, 20);
 
     return () => clearInterval(typeInterval);
-  }, [typingMessageId, allMessages]);
+  }, [
+    loadingState.typingMessageId,
+    allMessages,
+    conversationId,
+    stableSetLoadingState,
+  ]);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+    if (
+      !inputValue.trim() ||
+      loadingState.isLoading ||
+      !isActive ||
+      !conversationId
+    )
+      return;
+
+    // Double-check that we're still in the same conversation
+    if (!isActive) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -132,10 +190,15 @@ export const useConversationChat = (conversationId?: number) => {
       timestamp: new Date().toISOString(),
     };
 
-    // Add user message to local state immediately
-    setLocalMessages((prev) => [...prev, userMessage]);
-    setInputValue("");
-    setIsLoading(true);
+    // Add user message to local state immediately (only if still active)
+    if (isActive && conversationId) {
+      setLocalMessages((prev) => [...prev, userMessage]);
+      setInputValue("");
+      setPendingRequestConversationId(conversationId);
+      setLoadingState(conversationId, { isLoading: true });
+    } else {
+      return;
+    }
 
     // Scroll to bottom after adding user message
     setTimeout(() => {
@@ -149,6 +212,17 @@ export const useConversationChat = (conversationId?: number) => {
 
     postPrompt(inputValue.trim(), {
       onSuccess: (response) => {
+        // Only add the response if we're still in the same conversation that made the request
+        if (
+          !isActive ||
+          !conversationId ||
+          conversationId !== pendingRequestConversationId
+        ) {
+          setLoadingState(conversationId, { isLoading: false });
+          setPendingRequestConversationId(null);
+          return;
+        }
+
         const assistantMessageId = Date.now().toString();
         const assistantMessage: Message = {
           id: assistantMessageId,
@@ -159,8 +233,11 @@ export const useConversationChat = (conversationId?: number) => {
 
         // Add the assistant message to local state
         setLocalMessages((prev) => [...prev, assistantMessage]);
-        setTypingMessageId(assistantMessageId);
-        setIsLoading(false);
+        setLoadingState(conversationId, {
+          isLoading: false,
+          typingMessageId: assistantMessageId,
+          typingText: "",
+        });
 
         // Scroll to bottom after adding assistant message
         setTimeout(() => {
@@ -176,7 +253,8 @@ export const useConversationChat = (conversationId?: number) => {
       },
       onError: (error) => {
         console.error("Error sending message:", error);
-        setIsLoading(false);
+        setLoadingState(conversationId, { isLoading: false });
+        setPendingRequestConversationId(null);
         // Remove the user message from local state on error
         setLocalMessages((prev) => prev.slice(0, -1));
       },
@@ -193,9 +271,9 @@ export const useConversationChat = (conversationId?: number) => {
   return {
     messages: allMessages,
     inputValue,
-    isLoading: isLoading || isLoadingMessages,
-    typingMessageId,
-    typingText,
+    isLoading: isActive ? loadingState.isLoading || isLoadingMessages : false,
+    typingMessageId: isActive ? loadingState.typingMessageId : null,
+    typingText: isActive ? localTypingText : "",
     inputRef,
     messagesEndRef,
     setInputValue,
