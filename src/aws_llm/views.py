@@ -11,7 +11,9 @@ from aws_llm.serializers import (
     ChatConversationSerializer,
     ChatRequestSerializer, 
     ChatResponseSerializer, 
-    ErrorResponseSerializer
+    ErrorResponseSerializer,
+    ConversationsListSerializer,
+    ConversationSummarySerializer
 )
 
 logger = logging.getLogger(__name__)
@@ -227,6 +229,77 @@ class ChatHistoryView(APIView):
             }
 
             print(e)
+            
+            error_serializer = ErrorResponseSerializer(data=error_data)
+            error_serializer.is_valid()
+            return Response(error_serializer.data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ConversationsListView(APIView):
+    """
+    REST API endpoint to retrieve all conversations
+    """
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        operation_id='get_conversations',
+        summary='Get all conversations',
+        description='Retrieve a list of all conversations with summary information',
+        responses={
+            200: ConversationsListSerializer,
+            500: ErrorResponseSerializer,
+        },
+        tags=['Conversations']
+    )
+    def get(self, request):
+        """
+        Handle GET requests for all conversations
+        """
+        try:
+            # Get all conversations with message count
+            conversations = ChatConversation.objects.all().order_by('-created_at')
+            
+            # Create conversations data manually
+            conversations_data = []
+            for conversation in conversations:
+                # Get message count
+                message_count = ChatMessage.objects.filter(conversation=conversation).count()
+                
+                # Get last message
+                last_msg = ChatMessage.objects.filter(conversation=conversation).order_by('-created_at').first()
+                last_message = None
+                if last_msg:
+                    last_message = {
+                        'content': last_msg.message[:100] + '...' if len(last_msg.message) > 100 else last_msg.message,
+                        'role': last_msg.role,
+                        'timestamp': last_msg.created_at,
+                    }
+                
+                conversation_data = {
+                    'id': conversation.id,
+                    'user_username': conversation.user.username if hasattr(conversation, 'user') and conversation.user else 'Unknown',
+                    'created_at': conversation.created_at,
+                    'message_count': message_count,
+                    'last_message': last_message
+                }
+                conversations_data.append(conversation_data)
+            
+            # Create response data
+            response_data = {
+                'conversations': conversations_data,
+                'total': len(conversations_data)
+            }
+            
+            return Response(response_data, status=status.HTTP_200_OK)
+                
+        except Exception as e:
+            logger.error(f"Error retrieving conversations: {str(e)}")
+            
+            error_data = {
+                'error': 'Internal server error',
+                'details': str(e),
+                'timestamp': timezone.now()
+            }
             
             error_serializer = ErrorResponseSerializer(data=error_data)
             error_serializer.is_valid()

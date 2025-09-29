@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import ChatMessage
+from django.contrib.auth.models import User
 
 from aws_llm.models import ChatConversation
 
@@ -134,3 +135,44 @@ class ChatConversationSerializer(serializers.ModelSerializer):
             }
             for msg in messages
         ]
+
+
+class ConversationSummarySerializer(serializers.ModelSerializer):
+    """
+    Serializer for conversation summary in the conversations list
+    """
+    message_count = serializers.SerializerMethodField()
+    last_message = serializers.SerializerMethodField()
+    user_username = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = ChatConversation
+        fields = ['id', 'user_username', 'created_at', 'message_count', 'last_message']
+        read_only_fields = ['id', 'created_at']
+    
+    def get_message_count(self, obj):
+        """Get the number of messages in this conversation"""
+        return ChatMessage.objects.filter(conversation=obj).count()
+    
+    def get_last_message(self, obj):
+        """Get the last message in this conversation"""
+        last_msg = ChatMessage.objects.filter(conversation=obj).order_by('-created_at').first()
+        if last_msg:
+            return {
+                'content': last_msg.message[:100] + '...' if len(last_msg.message) > 100 else last_msg.message,
+                'role': last_msg.role,
+                'timestamp': last_msg.created_at,
+            }
+        return None
+    
+    def get_user_username(self, obj):
+        """Get the username of the user who owns this conversation"""
+        return obj.user.username if hasattr(obj, 'user') and obj.user else 'Unknown'
+
+
+class ConversationsListSerializer(serializers.Serializer):
+    """
+    Serializer for the conversations list response
+    """
+    conversations = ConversationSummarySerializer(many=True)
+    total = serializers.IntegerField(help_text="Total number of conversations")
