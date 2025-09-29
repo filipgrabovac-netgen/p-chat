@@ -1,38 +1,47 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClientFetch } from "../schema/apiClient";
+
+const API_BASE_URL = "http://localhost:8000/api/aws-llm";
 
 interface CreateConversationRequest {
-  user_id?: number;
+  title?: string;
 }
 
 interface CreateConversationResponse {
   id: number;
   user_id: number;
   created_at: string;
-  messages: string;
+  title: string;
+  message_count: number;
+  success: boolean;
 }
 
 interface UseCreateConversationReturn {
-  createConversation: (data?: CreateConversationRequest) => Promise<CreateConversationResponse>;
+  createConversation: (
+    data?: CreateConversationRequest
+  ) => Promise<CreateConversationResponse>;
   isLoading: boolean;
   error: string | null;
   isSuccess: boolean;
 }
 
-const createConversation = async (data?: CreateConversationRequest): Promise<CreateConversationResponse> => {
-  // For now, we'll create a conversation by making a POST request to a hypothetical endpoint
-  // This will need to be implemented in the backend
-  const response = await fetch("http://localhost:8000/api/aws-llm/conversations/", {
+const createConversation = async (
+  data?: CreateConversationRequest
+): Promise<CreateConversationResponse> => {
+  const response = await fetch(`${API_BASE_URL}/conversations/create/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Accept": "application/json",
+      Accept: "application/json",
     },
     body: JSON.stringify(data || {}),
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to create conversation: ${response.status} ${response.statusText}`);
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.error ||
+        `Failed to create conversation: ${response.status} ${response.statusText}`
+    );
   }
 
   return response.json();

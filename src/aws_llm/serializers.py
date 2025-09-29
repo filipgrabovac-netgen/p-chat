@@ -45,6 +45,10 @@ class ChatRequestSerializer(serializers.Serializer):
         default=False,
         help_text="Whether to stream the response"
     )
+    conversation_id = serializers.IntegerField(
+        required=False,
+        help_text="The ID of the conversation to add the message to"
+    )
 
     def validate(self, data):
         """Validate that either message or messages is provided, but not both"""
@@ -176,3 +180,33 @@ class ConversationsListSerializer(serializers.Serializer):
     """
     conversations = ConversationSummarySerializer(many=True)
     total = serializers.IntegerField(help_text="Total number of conversations")
+
+
+class ConversationCreateSerializer(serializers.Serializer):
+    """
+    Serializer for creating a new conversation
+    """
+    title = serializers.CharField(
+        max_length=200, 
+        required=False, 
+        default="New Conversation",
+        help_text="Title for the new conversation"
+    )
+
+    def validate_title(self, value):
+        """Validate that the title is not empty"""
+        if not value.strip():
+            raise serializers.ValidationError("Title cannot be empty")
+        return value.strip()
+
+
+class ConversationCreateResponseSerializer(serializers.Serializer):
+    """
+    Serializer for conversation creation response
+    """
+    id = serializers.IntegerField(help_text="ID of the created conversation")
+    user_id = serializers.IntegerField(help_text="ID of the user who owns the conversation")
+    created_at = serializers.DateTimeField(help_text="When the conversation was created")
+    title = serializers.CharField(help_text="Title of the conversation")
+    message_count = serializers.IntegerField(help_text="Number of messages in the conversation")
+    success = serializers.BooleanField(help_text="Whether the operation was successful")

@@ -13,8 +13,11 @@ from aws_llm.serializers import (
     ChatResponseSerializer, 
     ErrorResponseSerializer,
     ConversationsListSerializer,
-    ConversationSummarySerializer
+    ConversationSummarySerializer,
+    ConversationCreateSerializer,
+    ConversationCreateResponseSerializer
 )
+from aws_llm.crud_views import ConversationCreateView, ConversationDeleteView
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +70,6 @@ class ChatResponseView(APIView):
         """
         # Validate incoming request
         request_serializer = ChatRequestSerializer(data=request.data)
-        conversation = ChatConversation.objects.get(id=1, user_id=1)
         
         if not request_serializer.is_valid():
             error_serializer = ErrorResponseSerializer(data={
@@ -77,6 +79,10 @@ class ChatResponseView(APIView):
             })
             error_serializer.is_valid()
             return Response(error_serializer.data, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get conversation ID from request or default to 1
+        conversation_id = request_serializer.validated_data.get('conversation_id', 1)
+        conversation = ChatConversation.objects.get(id=conversation_id, user_id=1)
         
         try:
             # Extract validated data
@@ -175,14 +181,17 @@ class ChatHistoryView(APIView):
         },
         tags=['Chat']
     )
-    def get(self, request):
+    def get(self, request, conversation_id=None):
         """
         Handle GET requests for conversation history
-        Returns only conversation with user_id=1 and conversation_id=1
+        Returns conversation with user_id=1 and specified conversation_id
         """
         try:
-            # Get specific conversation with user_id=1 and conversation_id=1
-            conversation = ChatConversation.objects.get(id=1, user_id=1)
+            # Get conversation ID from URL parameter or default to 1
+            conv_id = conversation_id or request.GET.get('conversation_id', 1)
+            
+            # Get specific conversation with user_id=1 and specified conversation_id
+            conversation = ChatConversation.objects.get(id=conv_id, user_id=1)
             
             # Get all messages for this specific conversation
             messages = ChatMessage.objects.filter(conversation=conversation).order_by('created_at')

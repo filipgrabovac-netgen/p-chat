@@ -9,11 +9,16 @@ import { LoadingScreen } from "./components/LoadingScreen";
 import { useChat } from "./hooks/useChat.hook";
 import { useLoadingScreen } from "./hooks/useLoadingScreen.hook";
 import { useConversationsSidebar } from "./hooks/useConversationsSidebar.hook";
+import { useConversationChat } from "./hooks/useConversationChat.hook";
 
 export default function Home() {
   const { showLoading, handleLoadingComplete } = useLoadingScreen(500);
   const { currentConversationId, selectConversation } =
     useConversationsSidebar();
+  // Use conversation chat hook if a conversation is selected, otherwise use regular chat
+  const conversationChat = useConversationChat(currentConversationId);
+  const regularChat = useChat();
+
   const {
     messages,
     inputValue,
@@ -25,7 +30,7 @@ export default function Home() {
     setInputValue,
     handleSendMessage,
     handleKeyPress,
-  } = useChat();
+  } = currentConversationId ? conversationChat : regularChat;
 
   if (showLoading) {
     return <LoadingScreen onComplete={handleLoadingComplete} />;

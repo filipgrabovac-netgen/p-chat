@@ -1,12 +1,10 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { usePostPrompt } from "./usePostPrompt.hook";
-
+import { useConversationMessages } from "./useConversationMessages.hook";
 import { Message } from "../types/chat";
-import { useGetConversation } from "./useGetConversation.hook";
 
-export const useChat = (conversationId?: number) => {
-  const [messages, setMessages] = useState<Message[]>();
-
+export const useConversationChat = (conversationId?: number) => {
+  const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [typingMessageId, setTypingMessageId] = useState<string | null>(null);
@@ -15,7 +13,11 @@ export const useChat = (conversationId?: number) => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const { mutate: postPrompt } = usePostPrompt(conversationId);
-  const { data: messagesHistory } = useGetConversation();
+  const {
+    messages: conversationMessages,
+    isLoading: isLoadingMessages,
+    refetch: refetchMessages,
+  } = useConversationMessages(conversationId);
 
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
@@ -31,30 +33,26 @@ export const useChat = (conversationId?: number) => {
     }, 50);
   }, []);
 
-  useEffect(() => {
-    if (messagesHistory && messagesHistory.length > 0) {
-      setMessages(messagesHistory);
-      // Scroll to bottom after loading history with multiple attempts
-      setTimeout(() => {
-        scrollToBottom();
-      }, 100);
-      setTimeout(() => {
-        scrollToBottom();
-      }, 300);
-      setTimeout(() => {
-        scrollToBottom();
-      }, 500);
-      setTimeout(() => {
-        scrollToBottom();
-      }, 1000);
-      setTimeout(() => {
-        scrollToBottom();
-      }, 2000);
-    }
-  }, [messagesHistory, scrollToBottom]);
+  // Convert conversation messages to Message format
+  const backendMessages: Message[] = useMemo(
+    () =>
+      conversationMessages.map((msg) => ({
+        id: msg.id.toString(),
+        content: msg.content,
+        role: msg.role,
+        timestamp: msg.timestamp,
+      })),
+    [conversationMessages]
+  );
+
+  // Use backend messages as base, then add any local messages
+  const allMessages = useMemo(
+    () => [...backendMessages, ...localMessages],
+    [backendMessages, localMessages]
+  );
 
   useEffect(() => {
-    if (messages && messages.length > 0) {
+    if (allMessages && allMessages.length > 0) {
       scrollToBottom();
       // Additional scroll attempts for initial load
       setTimeout(() => {
@@ -64,7 +62,7 @@ export const useChat = (conversationId?: number) => {
         scrollToBottom();
       }, 500);
     }
-  }, [messages, typingText, scrollToBottom]);
+  }, [allMessages, typingText, scrollToBottom]);
 
   // Focus input on component mount and scroll to bottom
   useEffect(() => {
@@ -99,7 +97,7 @@ export const useChat = (conversationId?: number) => {
   useEffect(() => {
     if (!typingMessageId) return;
 
-    const message = messages?.find((m) => m.id === typingMessageId);
+    const message = allMessages?.find((m) => m.id === typingMessageId);
     if (!message || message.role !== "assistant") return;
 
     const fullText = message.content;
@@ -122,7 +120,7 @@ export const useChat = (conversationId?: number) => {
     }, 20);
 
     return () => clearInterval(typeInterval);
-  }, [typingMessageId, messages]);
+  }, [typingMessageId, allMessages]);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -134,7 +132,8 @@ export const useChat = (conversationId?: number) => {
       timestamp: new Date().toISOString(),
     };
 
-    setMessages((prev) => [...(prev || []), userMessage]);
+    // Add user message to local state immediately
+    setLocalMessages((prev) => [...prev, userMessage]);
     setInputValue("");
     setIsLoading(true);
 
@@ -158,8 +157,8 @@ export const useChat = (conversationId?: number) => {
           timestamp: new Date().toISOString(),
         };
 
-        // Add the message with full content
-        setMessages((prev) => [...(prev || []), assistantMessage]);
+        // Add the assistant message to local state
+        setLocalMessages((prev) => [...prev, assistantMessage]);
         setTypingMessageId(assistantMessageId);
         setIsLoading(false);
 
@@ -167,10 +166,19 @@ export const useChat = (conversationId?: number) => {
         setTimeout(() => {
           scrollToBottom();
         }, 50);
+
+        // Refetch messages from backend to get the persisted messages
+        setTimeout(() => {
+          refetchMessages();
+          // Clear local messages after refetch
+          setLocalMessages([]);
+        }, 1000);
       },
       onError: (error) => {
         console.error("Error sending message:", error);
         setIsLoading(false);
+        // Remove the user message from local state on error
+        setLocalMessages((prev) => prev.slice(0, -1));
       },
     });
   };
@@ -183,9 +191,9 @@ export const useChat = (conversationId?: number) => {
   };
 
   return {
-    messages,
+    messages: allMessages,
     inputValue,
-    isLoading,
+    isLoading: isLoading || isLoadingMessages,
     typingMessageId,
     typingText,
     inputRef,

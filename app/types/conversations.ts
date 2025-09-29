@@ -4,6 +4,13 @@ export interface LastMessage {
   timestamp: string;
 }
 
+export interface ConversationMessage {
+  id: number;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+}
+
 export interface Conversation {
   id: number;
   user_username: string;

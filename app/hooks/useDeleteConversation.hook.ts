@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+const API_BASE_URL = "http://localhost:8000/api/aws-llm";
+
 interface UseDeleteConversationReturn {
   deleteConversation: (conversationId: number) => Promise<void>;
   isLoading: boolean;
@@ -8,17 +10,23 @@ interface UseDeleteConversationReturn {
 }
 
 const deleteConversation = async (conversationId: number): Promise<void> => {
-  // For now, we'll delete a conversation by making a DELETE request to a hypothetical endpoint
-  // This will need to be implemented in the backend
-  const response = await fetch(`http://localhost:8000/api/aws-llm/conversations/${conversationId}/`, {
-    method: "DELETE",
-    headers: {
-      "Accept": "application/json",
-    },
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/conversations/${conversationId}/`,
+    {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    }
+  );
 
   if (!response.ok) {
-    throw new Error(`Failed to delete conversation: ${response.status} ${response.statusText}`);
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.error ||
+        `Failed to delete conversation: ${response.status} ${response.statusText}`
+    );
   }
 };
 
