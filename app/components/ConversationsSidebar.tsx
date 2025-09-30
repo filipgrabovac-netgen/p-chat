@@ -5,7 +5,7 @@ import { useCreateConversation } from "../hooks/useCreateConversation.hook";
 import { useDeleteConversation } from "../hooks/useDeleteConversation.hook";
 
 interface ConversationsSidebarProps {
-  currentConversationId?: number;
+  currentConversationId?: number | null;
   onConversationSelect: (conversationId: number) => void;
 }
 
@@ -28,7 +28,10 @@ export const ConversationsSidebar = ({
     }
   };
 
-  const handleDeleteConversation = async (conversationId: number, event: React.MouseEvent) => {
+  const handleDeleteConversation = async (
+    conversationId: number,
+    event: React.MouseEvent
+  ) => {
     event.stopPropagation(); // Prevent conversation selection when clicking delete
     try {
       await deleteConversation(conversationId);
@@ -68,15 +71,30 @@ export const ConversationsSidebar = ({
 
       {/* New Conversation Button */}
       <div className="p-4 border-b border-slate-200">
-        <button 
+        <button
           onClick={handleNewConversation}
           disabled={isCreating}
           className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isCreating ? (
-            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <svg
+              className="w-4 h-4 animate-spin"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
             </svg>
           ) : (
             <svg
@@ -197,7 +215,9 @@ export const ConversationsSidebar = ({
                       {formatTimestamp(conversation.created_at)}
                     </span>
                     <button
-                      onClick={(e) => handleDeleteConversation(conversation.id, e)}
+                      onClick={(e) =>
+                        handleDeleteConversation(conversation.id, e)
+                      }
                       disabled={isDeleting}
                       className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Delete conversation"

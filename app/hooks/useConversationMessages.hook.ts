@@ -53,7 +53,7 @@ const fetchConversationMessages = async (
 };
 
 export const useConversationMessages = (
-  conversationId?: number
+  conversationId?: number | null
 ): UseConversationMessagesReturn => {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["conversation", conversationId],

@@ -1,23 +1,32 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { usePostPrompt } from "./usePostPrompt.hook";
 import { useConversationMessages } from "./useConversationMessages.hook";
+import { useQueryClient } from "@tanstack/react-query";
+import { useConversationLoading } from "../contexts/ConversationLoadingContext";
 import { Message } from "../types/chat";
 
-export const useSimpleConversationChat = (conversationId?: number) => {
+export const useSimpleConversationChat = (
+  conversationId?: number | null,
+  isActive: boolean = false
+) => {
   const [inputValue, setInputValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [typingMessageId, setTypingMessageId] = useState<string | null>(null);
   const [typingText, setTypingText] = useState("");
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
+  const [requestingConversationId, setRequestingConversationId] = useState<
+    number | null
+  >(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const queryClient = useQueryClient();
+
+  const { setLoadingState, getLoadingState } = useConversationLoading();
+  const loadingState = conversationId
+    ? getLoadingState(conversationId)
+    : { isLoading: false, typingMessageId: null, typingText: "" };
 
   const { mutate: postPrompt } = usePostPrompt(conversationId);
-  const {
-    messages: conversationMessages,
-    isLoading: isLoadingMessages,
-    refetch: refetchMessages,
-  } = useConversationMessages(conversationId);
+  const { messages: conversationMessages, isLoading: isLoadingMessages } =
+    useConversationMessages(conversationId);
 
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
@@ -47,11 +56,14 @@ export const useSimpleConversationChat = (conversationId?: number) => {
     [backendMessages, localMessages]
   );
 
-  // Clear local messages when conversation changes
+  // Clear local messages when conversation changes (but only if not loading)
   useEffect(() => {
-    setLocalMessages([]);
-    setTypingText("");
-  }, [conversationId]);
+    if (!loadingState.isLoading) {
+      setLocalMessages([]);
+      setTypingText("");
+      setRequestingConversationId(null);
+    }
+  }, [conversationId, loadingState.isLoading]);
 
   useEffect(() => {
     if (messages && messages.length > 0) {
@@ -97,10 +109,18 @@ export const useSimpleConversationChat = (conversationId?: number) => {
 
   // Typewriter effect for assistant messages
   useEffect(() => {
-    if (!typingMessageId) return;
+    if (!loadingState.typingMessageId || !conversationId) {
+      setTypingText("");
+      return;
+    }
 
-    const message = messages?.find((m) => m.id === typingMessageId);
-    if (!message || message.role !== "assistant") return;
+    const message = messages?.find(
+      (m) => m.id === loadingState.typingMessageId
+    );
+    if (!message || message.role !== "assistant") {
+      setTypingText("");
+      return;
+    }
 
     const fullText = message.content;
     let currentIndex = 0;
@@ -112,7 +132,12 @@ export const useSimpleConversationChat = (conversationId?: number) => {
         currentIndex++;
       } else {
         clearInterval(typeInterval);
-        setTypingMessageId(null);
+        if (conversationId) {
+          setLoadingState(conversationId, {
+            typingMessageId: null,
+            typingText: "",
+          });
+        }
         setTypingText("");
         // Focus the input field after typing is complete
         setTimeout(() => {
@@ -122,10 +147,10 @@ export const useSimpleConversationChat = (conversationId?: number) => {
     }, 10);
 
     return () => clearInterval(typeInterval);
-  }, [typingMessageId, messages]);
+  }, [loadingState.typingMessageId, messages, conversationId, setLoadingState]);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading || !conversationId) return;
+    if (!inputValue.trim() || loadingState.isLoading || !conversationId) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -134,10 +159,13 @@ export const useSimpleConversationChat = (conversationId?: number) => {
       timestamp: new Date().toISOString(),
     };
 
+    // Track which conversation made this request
+    setRequestingConversationId(conversationId);
+
     // Add user message to local state immediately
     setLocalMessages((prev) => [...prev, userMessage]);
     setInputValue("");
-    setIsLoading(true);
+    setLoadingState(conversationId, { isLoading: true });
 
     // Scroll to bottom after adding user message
     setTimeout(() => {
@@ -151,6 +179,19 @@ export const useSimpleConversationChat = (conversationId?: number) => {
 
     postPrompt(inputValue.trim(), {
       onSuccess: (response) => {
+        // Only process the response if it's for the conversation that made the request
+        if (conversationId !== requestingConversationId) {
+          // Response is for a different conversation, just clean up loading state
+          setLoadingState(conversationId, { isLoading: false });
+          setRequestingConversationId(null);
+
+          // Still invalidate the query so the message appears when user switches back
+          queryClient.invalidateQueries({
+            queryKey: ["conversation", conversationId],
+          });
+          return;
+        }
+
         const assistantMessageId = Date.now().toString();
         const assistantMessage: Message = {
           id: assistantMessageId,
@@ -161,24 +202,31 @@ export const useSimpleConversationChat = (conversationId?: number) => {
 
         // Add assistant message to local state
         setLocalMessages((prev) => [...prev, assistantMessage]);
-        setTypingMessageId(assistantMessageId);
-        setIsLoading(false);
+        setLoadingState(conversationId, {
+          isLoading: false,
+          typingMessageId: assistantMessageId,
+          typingText: "",
+        });
+        setRequestingConversationId(null);
 
         // Scroll to bottom after adding assistant message
         setTimeout(() => {
           scrollToBottom();
         }, 10);
 
-        // Refetch messages from backend to get the persisted messages
+        // Invalidate and refetch the conversation data
         setTimeout(() => {
-          refetchMessages();
-          // Clear local messages after refetch to avoid duplicates
+          queryClient.invalidateQueries({
+            queryKey: ["conversation", conversationId],
+          });
+          // Clear local messages after invalidation to avoid duplicates
           setLocalMessages([]);
         }, 500);
       },
       onError: (error) => {
         console.error("Error sending message:", error);
-        setIsLoading(false);
+        setLoadingState(conversationId, { isLoading: false });
+        setRequestingConversationId(null);
         // Remove the user message from local state on error
         setLocalMessages((prev) => prev.slice(0, -1));
       },
@@ -195,9 +243,9 @@ export const useSimpleConversationChat = (conversationId?: number) => {
   return {
     messages,
     inputValue,
-    isLoading: isLoading || isLoadingMessages,
-    typingMessageId,
-    typingText,
+    isLoading: isActive ? loadingState.isLoading || isLoadingMessages : false,
+    typingMessageId: isActive ? loadingState.typingMessageId : null,
+    typingText: isActive ? typingText : "",
     inputRef,
     messagesEndRef,
     setInputValue,
