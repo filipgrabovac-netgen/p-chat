@@ -1,8 +1,8 @@
-import { ChatHeader } from "./ChatHeader";
-import { ChatMessages } from "./ChatMessages";
-import { ChatInput } from "./ChatInput";
+import { ChatHeader } from "../chat_header/ChatHeader";
+import { ChatInput } from "../chat_input/ChatInput";
 
-import { Message } from "../types/chat";
+import { Message } from "../../types/chat";
+import { ChatMessages } from "../chat_messages/ChatMessages";
 
 interface ChatContainerProps {
   messages: Message[];

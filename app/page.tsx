@@ -1,20 +1,18 @@
 "use client";
-import {
-  ConversationsSidebar,
-  ChatHeader,
-  ChatMessages,
-  ChatInput,
-} from "./components";
-import { LoadingScreen } from "./components/LoadingScreen";
+
+import { LoadingScreen } from "./components/loading_screen/LoadingScreen";
 import { useLoadingScreen } from "./hooks/useLoadingScreen.hook";
 import { useConversationsSidebar } from "./hooks/useConversationsSidebar.hook";
 import { useSimpleConversationChat } from "./hooks/useSimpleConversationChat.hook";
+import { ChatHeader } from "./components/chat_header/ChatHeader";
+import { ChatInput } from "./components/chat_input/ChatInput";
+import { ChatMessages } from "./components/chat_messages/ChatMessages";
+import { ConversationsSidebar } from "./components/conversations_sidebar/ConversationsSidebar";
 
 export default function Home() {
   const { showLoading, handleLoadingComplete } = useLoadingScreen(500);
   const { currentConversationId, selectConversation } =
     useConversationsSidebar();
-  // Use simple conversation chat hook - always call it (React rules)
   const {
     messages,
     inputValue,

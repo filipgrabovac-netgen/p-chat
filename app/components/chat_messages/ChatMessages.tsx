@@ -1,7 +1,6 @@
-import { ChatMessage } from "./ChatMessage";
-import { LoadingIndicator } from "./LoadingIndicator";
-
-import { Message } from "../types/chat";
+import { Message } from "@/app/types/chat";
+import { ChatMessage } from "../chat_message/ChatMessage";
+import { LoadingIndicator } from "../loading_indicator/LoadingIndicator";
 
 interface ChatMessagesProps {
   messages: Message[];

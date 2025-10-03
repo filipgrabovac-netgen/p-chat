@@ -1,8 +1,8 @@
 "use client";
 
-import { useConversations } from "../hooks/useConversations.hook";
-import { useCreateConversation } from "../hooks/useCreateConversation.hook";
-import { useDeleteConversation } from "../hooks/useDeleteConversation.hook";
+import { useConversations } from "@/app/hooks/useConversations.hook";
+import { useCreateConversation } from "@/app/hooks/useCreateConversation.hook";
+import { useDeleteConversation } from "@/app/hooks/useDeleteConversation.hook";
 
 interface ConversationsSidebarProps {
   currentConversationId?: number | null;
