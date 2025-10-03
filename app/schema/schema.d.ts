@@ -44,6 +44,234 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/aws-llm/chat/history/{conversation_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get chat history
+         * @description Get chat history for a user
+         */
+        get: operations["aws_llm_chat_history_retrieve_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/aws-llm/conversations/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get all conversations
+         * @description Retrieve a list of all conversations with summary information
+         */
+        get: operations["get_conversations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/aws-llm/conversations/{conversation_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a conversation
+         * @description Delete a specific conversation by ID (hardcoded to user_id=1)
+         */
+        delete: operations["delete_conversation"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/aws-llm/conversations/create/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a new conversation
+         * @description Create a new conversation for the current user (hardcoded to user_id=1)
+         */
+        post: operations["create_conversation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pdf-manager/pdfs/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description ViewSet for PDF document operations
+         *     Provides CRUD operations for PDF documents */
+        get: operations["pdf_manager_pdfs_list"];
+        put?: never;
+        /** @description ViewSet for PDF document operations
+         *     Provides CRUD operations for PDF documents */
+        post: operations["pdf_manager_pdfs_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pdf-manager/pdfs/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description ViewSet for PDF document operations
+         *     Provides CRUD operations for PDF documents */
+        get: operations["pdf_manager_pdfs_retrieve"];
+        /** @description ViewSet for PDF document operations
+         *     Provides CRUD operations for PDF documents */
+        put: operations["pdf_manager_pdfs_update"];
+        post?: never;
+        /** @description ViewSet for PDF document operations
+         *     Provides CRUD operations for PDF documents */
+        delete: operations["pdf_manager_pdfs_destroy"];
+        options?: never;
+        head?: never;
+        /** @description ViewSet for PDF document operations
+         *     Provides CRUD operations for PDF documents */
+        patch: operations["pdf_manager_pdfs_partial_update"];
+        trace?: never;
+    };
+    "/api/pdf-manager/pdfs/{id}/extracted_text/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get extracted text from PDF
+         * @description Retrieve the extracted text content from a PDF document
+         */
+        get: operations["get_pdf_text"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pdf-manager/pdfs/upload/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload a PDF document
+         * @description Upload a PDF file for text extraction and quiz generation
+         */
+        post: operations["upload_pdf"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pdf-manager/quizzes/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description ViewSet for quiz operations
+         *     Provides CRUD operations and quiz generation */
+        get: operations["pdf_manager_quizzes_list"];
+        put?: never;
+        /** @description ViewSet for quiz operations
+         *     Provides CRUD operations and quiz generation */
+        post: operations["pdf_manager_quizzes_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pdf-manager/quizzes/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description ViewSet for quiz operations
+         *     Provides CRUD operations and quiz generation */
+        get: operations["pdf_manager_quizzes_retrieve"];
+        /** @description ViewSet for quiz operations
+         *     Provides CRUD operations and quiz generation */
+        put: operations["pdf_manager_quizzes_update"];
+        post?: never;
+        /** @description ViewSet for quiz operations
+         *     Provides CRUD operations and quiz generation */
+        delete: operations["pdf_manager_quizzes_destroy"];
+        options?: never;
+        head?: never;
+        /** @description ViewSet for quiz operations
+         *     Provides CRUD operations and quiz generation */
+        patch: operations["pdf_manager_quizzes_partial_update"];
+        trace?: never;
+    };
+    "/api/pdf-manager/quizzes/generate/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generate a quiz from PDF or text
+         * @description Generate quiz questions using LLM from PDF document or custom text
+         */
+        post: operations["generate_quiz"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -70,6 +298,8 @@ export interface components {
              * @default false
              */
             stream: boolean;
+            /** @description The ID of the conversation to add the message to */
+            conversation_id?: number;
         };
         /** @description Serializer for chat responses */
         ChatResponse: {
@@ -85,6 +315,54 @@ export interface components {
             /** @description Whether the request was successful */
             success: boolean;
         };
+        /** @description Serializer for creating a new conversation */
+        ConversationCreateRequest: {
+            /**
+             * @description Title for the new conversation
+             * @default New Conversation
+             */
+            title: string;
+        };
+        /** @description Serializer for conversation creation response */
+        ConversationCreateResponse: {
+            /** @description ID of the created conversation */
+            id: number;
+            /** @description ID of the user who owns the conversation */
+            user_id: number;
+            /**
+             * Format: date-time
+             * @description When the conversation was created
+             */
+            created_at: string;
+            /** @description Title of the conversation */
+            title: string;
+            /** @description Number of messages in the conversation */
+            message_count: number;
+            /** @description Whether the operation was successful */
+            success: boolean;
+        };
+        /** @description Serializer for conversation summary in the conversations list */
+        ConversationSummary: {
+            readonly id: number;
+            readonly user_username: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            readonly message_count: string;
+            readonly last_message: string;
+        };
+        /** @description Serializer for the conversations list response */
+        ConversationsList: {
+            conversations: components["schemas"]["ConversationSummary"][];
+            /** @description Total number of conversations */
+            total: number;
+        };
+        /**
+         * @description * `easy` - Easy
+         *     * `medium` - Medium
+         *     * `hard` - Hard
+         * @enum {string}
+         */
+        DifficultyLevel9d4Enum: "easy" | "medium" | "hard";
         /** @description Serializer for error responses */
         ErrorResponse: {
             /** @description Error message */
@@ -96,6 +374,239 @@ export interface components {
              * @description When the error occurred
              */
             timestamp: string;
+        };
+        /**
+         * @description * `pending` - Pending
+         *     * `generating` - Generating
+         *     * `completed` - Completed
+         *     * `failed` - Failed
+         * @enum {string}
+         */
+        GenerationStatusEnum: "pending" | "generating" | "completed" | "failed";
+        /** @description Serializer for PDF documents */
+        PDFDocument: {
+            readonly id: number;
+            readonly user: number;
+            readonly user_username: string;
+            title: string;
+            /** Format: uri */
+            file: string;
+            /** @description File size in bytes */
+            readonly file_size: number;
+            /** @description Extracted text from PDF */
+            readonly extracted_text: string | null;
+            readonly page_count: number;
+            readonly processing_status: components["schemas"]["ProcessingStatusEnum"];
+            readonly error_message: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /** @description Serializer for listing PDF documents (summary view) */
+        PDFDocumentList: {
+            readonly id: number;
+            readonly user_username: string;
+            title: string;
+            /** @description File size in bytes */
+            file_size: number;
+            page_count?: number;
+            processing_status?: components["schemas"]["ProcessingStatusEnum"];
+            readonly quiz_count: string;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /** @description Serializer for PDF documents */
+        PDFDocumentRequest: {
+            title: string;
+            /** Format: binary */
+            file: string;
+        };
+        /** @description Serializer for PDF upload requests */
+        PDFUploadRequest: {
+            /**
+             * Format: binary
+             * @description PDF file to upload
+             */
+            file: string;
+            /** @description Optional title for the PDF document */
+            title?: string;
+        };
+        PaginatedPDFDocumentListList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["PDFDocumentList"][];
+        };
+        PaginatedQuizListList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["QuizList"][];
+        };
+        /** @description Serializer for PDF documents */
+        PatchedPDFDocumentRequest: {
+            title?: string;
+            /** Format: binary */
+            file?: string;
+        };
+        /** @description Serializer for quizzes */
+        PatchedQuizRequest: {
+            pdf_document?: number | null;
+            title?: string;
+            /** @description Text used to generate quiz */
+            source_text?: string;
+            difficulty_level?: components["schemas"]["DifficultyLevel9d4Enum"];
+            num_questions?: number;
+        };
+        /**
+         * @description * `pending` - Pending
+         *     * `processing` - Processing
+         *     * `completed` - Completed
+         *     * `failed` - Failed
+         * @enum {string}
+         */
+        ProcessingStatusEnum: "pending" | "processing" | "completed" | "failed";
+        /**
+         * @description * `multiple_choice` - Multiple Choice
+         *     * `true_false` - True/False
+         *     * `short_answer` - Short Answer
+         * @enum {string}
+         */
+        QuestionTypeEnum: "multiple_choice" | "true_false" | "short_answer";
+        /**
+         * @description * `multiple_choice` - multiple_choice
+         *     * `true_false` - true_false
+         *     * `short_answer` - short_answer
+         * @enum {string}
+         */
+        QuestionTypesEnum: "multiple_choice" | "true_false" | "short_answer";
+        /** @description Serializer for quizzes */
+        Quiz: {
+            readonly id: number;
+            readonly user: number;
+            readonly user_username: string;
+            pdf_document?: number | null;
+            readonly pdf_title: string | null;
+            title: string;
+            /** @description Text used to generate quiz */
+            source_text: string;
+            difficulty_level?: components["schemas"]["DifficultyLevel9d4Enum"];
+            num_questions?: number;
+            readonly generation_status: components["schemas"]["GenerationStatusEnum"];
+            readonly questions: components["schemas"]["QuizQuestion"][];
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /** @description Serializer for quiz answers */
+        QuizAnswer: {
+            readonly id: number;
+            answer_text: string;
+            is_correct?: boolean;
+            order?: number;
+        };
+        /** @description Serializer for quiz answers */
+        QuizAnswerRequest: {
+            answer_text: string;
+            is_correct?: boolean;
+            order?: number;
+        };
+        /**
+         * @description * `easy` - easy
+         *     * `medium` - medium
+         *     * `hard` - hard
+         * @enum {string}
+         */
+        QuizGenerationRequestDifficultyLevelEnum: "easy" | "medium" | "hard";
+        /** @description Serializer for quiz generation requests */
+        QuizGenerationRequestRequest: {
+            /** @description ID of the PDF document to generate quiz from */
+            pdf_document_id?: number;
+            /** @description Custom text to generate quiz from (if not using PDF) */
+            source_text?: string;
+            /**
+             * @description Title for the quiz
+             * @default Generated Quiz
+             */
+            title: string;
+            /**
+             * @description Difficulty level of the quiz
+             *
+             *     * `easy` - easy
+             *     * `medium` - medium
+             *     * `hard` - hard
+             * @default medium
+             */
+            difficulty_level: components["schemas"]["QuizGenerationRequestDifficultyLevelEnum"];
+            /**
+             * @description Number of questions to generate
+             * @default 5
+             */
+            num_questions: number;
+            /**
+             * @description Types of questions to generate
+             * @default [
+             *       "multiple_choice",
+             *       "true_false"
+             *     ]
+             */
+            question_types: components["schemas"]["QuestionTypesEnum"][];
+        };
+        /** @description Serializer for listing quizzes (summary view) */
+        QuizList: {
+            readonly id: number;
+            readonly user_username: string;
+            readonly pdf_title: string | null;
+            title: string;
+            difficulty_level?: components["schemas"]["DifficultyLevel9d4Enum"];
+            num_questions?: number;
+            readonly question_count: string;
+            generation_status?: components["schemas"]["GenerationStatusEnum"];
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /** @description Serializer for quiz questions */
+        QuizQuestion: {
+            readonly id: number;
+            question_type: components["schemas"]["QuestionTypeEnum"];
+            question_text: string;
+            order?: number;
+            readonly answers: components["schemas"]["QuizAnswer"][];
+        };
+        /** @description Serializer for quiz questions */
+        QuizQuestionRequest: {
+            question_type: components["schemas"]["QuestionTypeEnum"];
+            question_text: string;
+            order?: number;
+        };
+        /** @description Serializer for quizzes */
+        QuizRequest: {
+            pdf_document?: number | null;
+            title: string;
+            /** @description Text used to generate quiz */
+            source_text: string;
+            difficulty_level?: components["schemas"]["DifficultyLevel9d4Enum"];
+            num_questions?: number;
         };
     };
     responses: never;
@@ -165,6 +676,523 @@ export interface operations {
                 };
             };
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    aws_llm_chat_history_retrieve_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatConversation"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_conversations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationsList"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_conversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Conversation deleted successfully */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_conversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ConversationCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ConversationCreateRequest"];
+                "multipart/form-data": components["schemas"]["ConversationCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationCreateResponse"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    pdf_manager_pdfs_list: {
+        parameters: {
+            query?: {
+                /** @description A page number within the paginated result set. */
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedPDFDocumentListList"];
+                };
+            };
+        };
+    };
+    pdf_manager_pdfs_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["PDFDocumentRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PDFDocumentRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PDFDocument"];
+                };
+            };
+        };
+    };
+    pdf_manager_pdfs_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this pdf document. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PDFDocument"];
+                };
+            };
+        };
+    };
+    pdf_manager_pdfs_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this pdf document. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["PDFDocumentRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PDFDocumentRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PDFDocument"];
+                };
+            };
+        };
+    };
+    pdf_manager_pdfs_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this pdf document. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    pdf_manager_pdfs_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this pdf document. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": components["schemas"]["PatchedPDFDocumentRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPDFDocumentRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PDFDocument"];
+                };
+            };
+        };
+    };
+    get_pdf_text: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this pdf document. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PDFDocument"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    upload_pdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["PDFUploadRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PDFUploadRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PDFDocument"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    pdf_manager_quizzes_list: {
+        parameters: {
+            query?: {
+                /** @description A page number within the paginated result set. */
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedQuizListList"];
+                };
+            };
+        };
+    };
+    pdf_manager_quizzes_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuizRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["QuizRequest"];
+                "multipart/form-data": components["schemas"]["QuizRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Quiz"];
+                };
+            };
+        };
+    };
+    pdf_manager_quizzes_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this quiz. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Quiz"];
+                };
+            };
+        };
+    };
+    pdf_manager_quizzes_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this quiz. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuizRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["QuizRequest"];
+                "multipart/form-data": components["schemas"]["QuizRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Quiz"];
+                };
+            };
+        };
+    };
+    pdf_manager_quizzes_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this quiz. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    pdf_manager_quizzes_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this quiz. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedQuizRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedQuizRequest"];
+                "multipart/form-data": components["schemas"]["PatchedQuizRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Quiz"];
+                };
+            };
+        };
+    };
+    generate_quiz: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["QuizGenerationRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["QuizGenerationRequestRequest"];
+                "multipart/form-data": components["schemas"]["QuizGenerationRequestRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Quiz"];
+                };
+            };
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };

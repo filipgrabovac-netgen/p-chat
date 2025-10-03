@@ -1,15 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClientFetch } from "../schema/apiClient";
+import { components } from "@/app/schema/schema";
 import { Message } from "../types/chat";
 
-interface BackendMessage {
+type BackendMessage = {
   id: number;
   role: "user" | "assistant";
   content: string;
   timestamp: string;
-}
+};
 
-interface BackendResponse {
+type BackendResponse = {
   conversation: {
     id: number;
     user_id: number;
@@ -18,7 +19,7 @@ interface BackendResponse {
   };
   timestamp: string;
   success: boolean;
-}
+};
 
 export const useGetConversation = () => {
   return useQuery({

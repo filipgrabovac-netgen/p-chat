@@ -1,8 +1,6 @@
 from rest_framework import serializers
-from .models import ChatMessage
+from .models import ChatMessage, ChatConversation
 from django.contrib.auth.models import User
-
-from aws_llm.models import ChatConversation
 
 
 class MessageSerializer(serializers.Serializer):
@@ -114,7 +112,6 @@ class ErrorResponseSerializer(serializers.Serializer):
     timestamp = serializers.DateTimeField(
         help_text="When the error occurred"
     )
-
 
 
 class ChatConversationSerializer(serializers.ModelSerializer):

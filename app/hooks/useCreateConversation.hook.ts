@@ -1,57 +1,43 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClientFetch } from "../schema/apiClient";
+import { components } from "@/app/schema/schema";
 
-const API_BASE_URL = "http://localhost:8000/api/aws-llm";
-
-interface CreateConversationRequest {
-  title?: string;
-}
-
-interface CreateConversationResponse {
-  id: number;
-  user_id: number;
-  created_at: string;
-  title: string;
-  message_count: number;
-  success: boolean;
-}
+type ConversationCreateRequest =
+  components["schemas"]["ConversationCreateRequest"];
+type ConversationCreateResponse =
+  components["schemas"]["ConversationCreateResponse"];
 
 interface UseCreateConversationReturn {
   createConversation: (
-    data?: CreateConversationRequest
-  ) => Promise<CreateConversationResponse>;
+    data?: Partial<ConversationCreateRequest>
+  ) => Promise<ConversationCreateResponse>;
   isLoading: boolean;
   error: string | null;
   isSuccess: boolean;
 }
 
-const createConversation = async (
-  data?: CreateConversationRequest
-): Promise<CreateConversationResponse> => {
-  const response = await fetch(`${API_BASE_URL}/conversations/create/`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify(data || {}),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      errorData.error ||
-        `Failed to create conversation: ${response.status} ${response.statusText}`
-    );
-  }
-
-  return response.json();
-};
-
 export const useCreateConversation = (): UseCreateConversationReturn => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: createConversation,
+    mutationFn: async (
+      data?: Partial<ConversationCreateRequest>
+    ): Promise<ConversationCreateResponse> => {
+      const response = await apiClientFetch.POST(
+        "/api/aws-llm/conversations/create/",
+        {
+          body: {
+            title: data?.title || "New Conversation",
+          },
+        }
+      );
+
+      if (response.error) {
+        throw new Error("Failed to create conversation");
+      }
+
+      return response.data as ConversationCreateResponse;
+    },
     onSuccess: () => {
       // Invalidate and refetch conversations list
       queryClient.invalidateQueries({ queryKey: ["conversations"] });

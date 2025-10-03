@@ -1,34 +1,29 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  ConversationListResponse,
-  UseConversationsReturn,
-} from "../types/conversations";
+import { apiClientFetch } from "../schema/apiClient";
+import { components } from "@/app/schema/schema";
 
-const API_BASE_URL = "http://localhost:8000/api/aws-llm";
+type ConversationsList = components["schemas"]["ConversationsList"];
 
-const fetchConversations = async (): Promise<ConversationListResponse> => {
-  const response = await fetch(`${API_BASE_URL}/conversations/`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch conversations: ${response.status} ${response.statusText}`
-    );
-  }
-
-  const data = await response.json();
-  return data;
-};
+interface UseConversationsReturn {
+  conversations: components["schemas"]["ConversationSummary"][];
+  total: number;
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => void;
+}
 
 export const useConversations = (): UseConversationsReturn => {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["conversations"],
-    queryFn: fetchConversations,
+    queryFn: async (): Promise<ConversationsList> => {
+      const response = await apiClientFetch.GET("/api/aws-llm/conversations/");
+
+      if (response.error) {
+        throw new Error("Failed to fetch conversations");
+      }
+
+      return response.data as ConversationsList;
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-const API_BASE_URL = "http://localhost:8000/api/aws-llm";
+import { apiClientFetch } from "../schema/apiClient";
+import { components } from "@/app/schema/schema";
 
 interface UseDeleteConversationReturn {
   deleteConversation: (conversationId: number) => Promise<void>;
@@ -9,32 +9,26 @@ interface UseDeleteConversationReturn {
   isSuccess: boolean;
 }
 
-const deleteConversation = async (conversationId: number): Promise<void> => {
-  const response = await fetch(
-    `${API_BASE_URL}/conversations/${conversationId}/`,
-    {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    }
-  );
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      errorData.error ||
-        `Failed to delete conversation: ${response.status} ${response.statusText}`
-    );
-  }
-};
-
 export const useDeleteConversation = (): UseDeleteConversationReturn => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: deleteConversation,
+    mutationFn: async (conversationId: number): Promise<void> => {
+      const response = await apiClientFetch.DELETE(
+        "/api/aws-llm/conversations/{conversation_id}/",
+        {
+          params: {
+            path: {
+              conversation_id: conversationId,
+            },
+          },
+        }
+      );
+
+      if (response.error) {
+        throw new Error("Failed to delete conversation");
+      }
+    },
     onSuccess: () => {
       // Invalidate and refetch conversations list
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
