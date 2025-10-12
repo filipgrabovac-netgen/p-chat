@@ -184,8 +184,8 @@ export const PDFList = ({
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete PDF Document</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Are you sure you want to delete "{pdf.title}"? This
-                        action will permanently delete the PDF file and all
+                        Are you sure you want to delete &quot;{pdf.title}&quot;?
+                        This action will permanently delete the PDF file and all
                         associated quizzes. This action cannot be undone.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
