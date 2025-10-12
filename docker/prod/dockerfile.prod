@@ -13,7 +13,7 @@ COPY ./lib ./lib
 COPY ./public ./public
 COPY ./next.config.ts ./tsconfig.json ./
 COPY ./postcss.config.mjs ./
-COPY ./next-env.d.ts ./
+
 
 # Set environment for production build
 ENV NODE_ENV=production
