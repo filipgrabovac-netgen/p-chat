@@ -36,6 +36,9 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml uv.lock ./
+ENV GOOGLE_API_KEY=${GOOGLE_API_KEY}
+ENV SECRET_KEY=${SECRET_KEY}
+ENV DATABASE_URL=${DATABASE_URL}
 RUN uv sync
 COPY ./src ./src
 COPY ./manage.py ./manage.py

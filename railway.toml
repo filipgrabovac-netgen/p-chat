@@ -1,0 +1,8 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "docker/prod/dockerfile.prod"
+
+[deploy]
+startCommand = "sh -c 'uv run python manage.py migrate --noinput && uv run python manage.py runserver 0.0.0.0:$PORT'"
+healthcheckPath = "/"
+restartPolicyType = "ON_FAILURE"
