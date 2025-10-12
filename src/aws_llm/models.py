@@ -5,10 +5,11 @@ from django.contrib.auth.models import User
 
 class ChatConversation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=200, default="New Conversation")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Conversation {self.id}"
+        return f"Conversation {self.id}: {self.title}"
 
 class ChatMessage(models.Model):
     ROLE_CHOICES = [

@@ -1,9 +1,16 @@
 from django.urls import path
-from . import views
+from . import views, crud_views
 
 app_name = 'aws_llm'
 
 urlpatterns = [
+    # Chat endpoints
     path('chat/', views.ChatResponseView.as_view(), name='chat_response'),
     path('chat/history/', views.ChatHistoryView.as_view(), name='chat_history'),
+    path('chat/history/<int:conversation_id>/', views.ChatHistoryView.as_view(), name='chat_history_by_id'),
+    
+    # Conversation endpoints
+    path('conversations/', views.ConversationsListView.as_view(), name='conversations_list'),
+    path('conversations/create/', crud_views.ConversationCreateView.as_view(), name='conversation_create'),
+    path('conversations/<int:conversation_id>/', crud_views.ConversationDeleteView.as_view(), name='conversation_delete'),
 ]

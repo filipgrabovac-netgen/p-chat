@@ -1,8 +1,8 @@
-import { ChatHeader } from "./ChatHeader";
-import { ChatMessages } from "./ChatMessages";
-import { ChatInput } from "./ChatInput";
+import { ChatHeader } from "../chat_header/ChatHeader";
+import { ChatInput } from "../chat_input/ChatInput";
 
-import { Message } from "../types/chat";
+import { Message } from "../../types/chat";
+import { ChatMessages } from "../chat_messages/ChatMessages";
 
 interface ChatContainerProps {
   messages: Message[];
@@ -14,6 +14,7 @@ interface ChatContainerProps {
   onSendMessage: () => void;
   onKeyPress: (e: React.KeyboardEvent) => void;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
+  messagesEndRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export const ChatContainer = ({
@@ -26,6 +27,7 @@ export const ChatContainer = ({
   onSendMessage,
   onKeyPress,
   inputRef,
+  messagesEndRef,
 }: ChatContainerProps) => {
   return (
     <div className="flex flex-col h-screen bg-white font-sans">
@@ -36,6 +38,7 @@ export const ChatContainer = ({
         isLoading={isLoading}
         typingMessageId={typingMessageId}
         typingText={typingText}
+        messagesEndRef={messagesEndRef}
       />
 
       <ChatInput

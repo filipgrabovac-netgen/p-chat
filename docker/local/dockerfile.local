@@ -3,7 +3,9 @@ WORKDIR /app
 RUN npm install -g pnpm@9.15.5
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+# Copy package files
 COPY package.json pnpm-lock.yaml ./
+# Install dependencies (this will be cached by Docker)
 RUN pnpm install --frozen-lockfile
 CMD ["pnpm", "run","dev"]
 

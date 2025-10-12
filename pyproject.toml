@@ -21,4 +21,5 @@ dependencies = [
     "dotenv>=0.9.9",
     "drf-spectacular>=0.28.0",
     "dj-database-url>=3.0.1",
+    "pypdf2>=3.0.0",
 ]

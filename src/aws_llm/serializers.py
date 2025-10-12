@@ -1,6 +1,6 @@
 from rest_framework import serializers
-
-from aws_llm.models import ChatConversation
+from .models import ChatMessage, ChatConversation
+from django.contrib.auth.models import User
 
 
 class MessageSerializer(serializers.Serializer):
@@ -42,6 +42,10 @@ class ChatRequestSerializer(serializers.Serializer):
         required=False,
         default=False,
         help_text="Whether to stream the response"
+    )
+    conversation_id = serializers.IntegerField(
+        required=False,
+        help_text="The ID of the conversation to add the message to"
     )
 
     def validate(self, data):
@@ -110,13 +114,96 @@ class ErrorResponseSerializer(serializers.Serializer):
     )
 
 
-
 class ChatConversationSerializer(serializers.ModelSerializer):
     """
     Serializer for chat conversations
     """
+    messages = serializers.SerializerMethodField()
+    
     class Meta:
         model = ChatConversation
-        fields = '__all__'
+        fields = ['id', 'user_id', 'created_at', 'messages']
+    
+    def get_messages(self, obj):
+        """Get all messages for this conversation"""
+        messages = ChatMessage.objects.filter(conversation=obj).order_by('created_at')
+        return [
+            {
+                'id': msg.id,
+                'role': msg.role,
+                'content': msg.message,
+                'timestamp': msg.created_at,
+            }
+            for msg in messages
+        ]
 
-    messages = serializers.SerializerMethodField()
+
+class ConversationSummarySerializer(serializers.ModelSerializer):
+    """
+    Serializer for conversation summary in the conversations list
+    """
+    message_count = serializers.SerializerMethodField()
+    last_message = serializers.SerializerMethodField()
+    user_username = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = ChatConversation
+        fields = ['id', 'user_username', 'created_at', 'message_count', 'last_message']
+        read_only_fields = ['id', 'created_at']
+    
+    def get_message_count(self, obj):
+        """Get the number of messages in this conversation"""
+        return ChatMessage.objects.filter(conversation=obj).count()
+    
+    def get_last_message(self, obj):
+        """Get the last message in this conversation"""
+        last_msg = ChatMessage.objects.filter(conversation=obj).order_by('-created_at').first()
+        if last_msg:
+            return {
+                'content': last_msg.message[:100] + '...' if len(last_msg.message) > 100 else last_msg.message,
+                'role': last_msg.role,
+                'timestamp': last_msg.created_at,
+            }
+        return None
+    
+    def get_user_username(self, obj):
+        """Get the username of the user who owns this conversation"""
+        return obj.user.username if hasattr(obj, 'user') and obj.user else 'Unknown'
+
+
+class ConversationsListSerializer(serializers.Serializer):
+    """
+    Serializer for the conversations list response
+    """
+    conversations = ConversationSummarySerializer(many=True)
+    total = serializers.IntegerField(help_text="Total number of conversations")
+
+
+class ConversationCreateSerializer(serializers.Serializer):
+    """
+    Serializer for creating a new conversation
+    """
+    title = serializers.CharField(
+        max_length=200, 
+        required=False, 
+        default="New Conversation",
+        help_text="Title for the new conversation"
+    )
+
+    def validate_title(self, value):
+        """Validate that the title is not empty"""
+        if not value.strip():
+            raise serializers.ValidationError("Title cannot be empty")
+        return value.strip()
+
+
+class ConversationCreateResponseSerializer(serializers.Serializer):
+    """
+    Serializer for conversation creation response
+    """
+    id = serializers.IntegerField(help_text="ID of the created conversation")
+    user_id = serializers.IntegerField(help_text="ID of the user who owns the conversation")
+    created_at = serializers.DateTimeField(help_text="When the conversation was created")
+    title = serializers.CharField(help_text="Title of the conversation")
+    message_count = serializers.IntegerField(help_text="Number of messages in the conversation")
+    success = serializers.BooleanField(help_text="Whether the operation was successful")

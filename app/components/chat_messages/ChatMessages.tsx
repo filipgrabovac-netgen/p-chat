@@ -1,13 +1,13 @@
-import { ChatMessage } from "./ChatMessage";
-import { LoadingIndicator } from "./LoadingIndicator";
-
-import { Message } from "../types/chat";
+import { Message } from "@/app/types/chat";
+import { ChatMessage } from "../chat_message/ChatMessage";
+import { LoadingIndicator } from "../loading_indicator/LoadingIndicator";
 
 interface ChatMessagesProps {
   messages: Message[];
   isLoading: boolean;
   typingMessageId: string | null;
   typingText: string;
+  messagesEndRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export const ChatMessages = ({
@@ -15,9 +15,10 @@ export const ChatMessages = ({
   isLoading,
   typingMessageId,
   typingText,
+  messagesEndRef,
 }: ChatMessagesProps) => {
   return (
-    <div className="flex-1 overflow-y-auto px-6 py-8 bg-gradient-to-b from-slate-50 to-white">
+    <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-6 lg:py-8 bg-gradient-to-b from-slate-50 to-white mobile-scroll">
       <div className="max-w-4xl mx-auto space-y-2">
         {messages.map((message) => {
           const isTyping =
@@ -38,7 +39,7 @@ export const ChatMessages = ({
 
         {isLoading && <LoadingIndicator />}
 
-        <div id="messages-end" />
+        <div ref={messagesEndRef} />
       </div>
     </div>
   );

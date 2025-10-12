@@ -1,10 +1,30 @@
 FROM node:22-alpine as fe-prod
 WORKDIR /app
 RUN npm install -g pnpm@9.15.4
-COPY package.json .
+
+# Copy package files first for better caching
+COPY package.json pnpm-lock.yaml ./
 RUN pnpm install
+
+# Copy all necessary files for Next.js build
 COPY ./app ./app
+COPY ./components ./components
+COPY ./lib ./lib
+COPY ./public ./public
+COPY ./next.config.ts ./tsconfig.json ./
+COPY ./postcss.config.mjs ./
+COPY ./next-env.d.ts ./
+
+# Set environment for production build
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Build the Next.js app
 RUN pnpm run build
+
+# Debug: List the contents of the build output
+RUN ls -la /app/dist/ || echo "No out directory found"
+RUN ls -la /app/.next/ || echo "No .next directory found"
 
 FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim as be-prod
 WORKDIR /app
@@ -21,5 +41,12 @@ COPY ./src ./src
 COPY ./manage.py ./manage.py
 COPY ./uv.lock ./uv.lock
 COPY ./pyproject.toml ./pyproject.toml
-COPY --from=fe-prod /app/.next/ ./
-CMD ["uv", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+# Copy the built Next.js frontend
+COPY --from=fe-prod /app/out/ ./out/
+
+# Collect static files
+RUN uv run python manage.py collectstatic --noinput
+
+# Run migrations on startup
+CMD ["sh", "-c", "uv run python manage.py migrate --noinput && uv run python manage.py runserver 0.0.0.0:8000"]

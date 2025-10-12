@@ -1,74 +1,46 @@
 services:
   db:
     image: postgres:15-alpine
+    env_file:
+      - path: .env
+        required: false
     environment:
-      - POSTGRES_DB=pchat_prod
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      POSTGRES_DB: ${POSTGRES_DB:-pchat_prod}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 5s
       timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
       retries: 5
 
   backend:
     build:
       context: .
-      dockerfile: dockerfile.prod
-      target: backend
+      dockerfile: docker/prod/dockerfile.prod
     ports:
-      - "8000:8000"
-    volumes:
-      - ./src:/app/src
-      - ./manage.py:/app/manage.py
-      - ./pyproject.toml:/app/pyproject.toml
-      - ./uv.lock:/app/uv.lock
-      - /app/__pycache__
-      - /app/.venv-docker
+      - "${PORT:-8000}:8000"
+    env_file:
+      - path: .env
+        required: false
     environment:
-      - DEBUG=0
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/pchat_prod
-      - REDIS_URL=redis://redis:6379/0
-      - DJANGO_SETTINGS_MODULE=settings.prod
-    command: uv run python manage.py runserver
+      DEBUG: ${DEBUG:-0}
+      DJANGO_SETTINGS_MODULE: settings.prod
+      PYTHONPATH: /app/src
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-pchat_prod}}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      RAILWAY_PUBLIC_DOMAIN: ${RAILWAY_PUBLIC_DOMAIN:-}
+      SECRET_KEY: ${SECRET_KEY:-change-this-secret-key-in-production}
+      PORT: ${PORT:-8000}
+    command: sh -c "uv run python manage.py migrate --noinput && uv run python manage.py runserver 0.0.0.0:${PORT:-8000}"
     depends_on:
       db:
         condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  frontend:
-    build:
-      context: .
-      dockerfile: dockerfile.prod
-      target: fe-prod
-    ports:
-      - "3000:3000"
-    volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/.next
-    environment:
-      - NODE_ENV=production
-    depends_on:
-      - backend
 
 volumes:
   postgres_data:
-  redis_data:
