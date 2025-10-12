@@ -24,14 +24,14 @@ export const ChatInput = ({
       initial={{ y: 50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="bg-white border-t border-gray-100 px-6 py-6 shadow-lg"
+      className="bg-white border-t border-gray-100 px-4 lg:px-6 py-4 lg:py-6 shadow-lg"
     >
       <div className="max-w-4xl mx-auto">
         <div className="relative">
           <motion.div
             whileHover={{ scale: 1.01, y: -1 }}
             whileFocus={{ scale: 1.01, y: -1 }}
-            className="flex items-center align-middle space-x-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-2xl px-6 py-4 border border-slate-200/50 hover:border-slate-600/30 focus-within:border-slate-600 focus-within:ring-4 focus-within:ring-slate-200/50 transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm"
+            className="flex items-center align-middle space-x-3 lg:space-x-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl lg:rounded-2xl px-4 lg:px-6 py-3 lg:py-4 border border-slate-200/50 hover:border-slate-600/30 focus-within:border-slate-600 focus-within:ring-4 focus-within:ring-slate-200/50 transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm"
           >
             <div className="flex-1 flex items-center">
               <textarea
@@ -40,10 +40,10 @@ export const ChatInput = ({
                 onChange={(e) => onChange(e.target.value)}
                 onKeyPress={onKeyPress}
                 placeholder={placeholder}
-                className="w-full bg-transparent border-none outline-none resize-none text-slate-900 placeholder-slate-500/70 text-base leading-relaxed font-medium py-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent"
+                className="w-full bg-transparent border-none outline-none resize-none text-slate-900 placeholder-slate-500/70 text-sm lg:text-base leading-relaxed font-medium py-1 lg:py-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent"
                 rows={1}
                 style={{
-                  minHeight: "28px",
+                  minHeight: "24px",
                   maxHeight: "120px",
                   lineHeight: "1.5",
                 }}
@@ -59,17 +59,17 @@ export const ChatInput = ({
               whileTap={{ scale: 0.95 }}
               onClick={onSend}
               disabled={!value.trim() || disabled}
-              className="group relative flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 text-white hover:from-slate-700 hover:via-slate-600 hover:to-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-200/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-xl hover:shadow-2xl disabled:shadow-none overflow-hidden"
+              className="group relative flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 text-white hover:from-slate-700 hover:via-slate-600 hover:to-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-200/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-xl hover:shadow-2xl disabled:shadow-none overflow-hidden"
               title="Send message (Enter)"
             >
               {/* Shimmer effect overlay */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-pulse transition-opacity duration-300"></div>
 
               {disabled ? (
-                <div className="relative z-10 w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className="relative z-10 w-4 h-4 lg:w-5 lg:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : (
                 <motion.svg
-                  className="relative z-10 w-5 h-5"
+                  className="relative z-10 w-4 h-4 lg:w-5 lg:h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -91,24 +91,26 @@ export const ChatInput = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="mt-6 flex items-center justify-between text-xs text-slate-500"
+            className="mt-4 lg:mt-6 flex flex-col lg:flex-row lg:items-center lg:justify-between text-xs text-slate-500 space-y-2 lg:space-y-0"
           >
-            <div className="flex items-center space-x-6">
+            <div className="flex flex-col lg:flex-row lg:items-center space-y-2 lg:space-y-0 lg:space-x-6">
               <span className="flex items-center font-medium">
-                <kbd className="px-3 py-1.5 text-xs font-bold text-slate-700 bg-gradient-to-r from-slate-100 to-slate-200 border border-slate-300/50 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+                <kbd className="px-2 lg:px-3 py-1 lg:py-1.5 text-xs font-bold text-slate-700 bg-gradient-to-r from-slate-100 to-slate-200 border border-slate-300/50 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
                   Enter
                 </kbd>
-                <span className="ml-3 text-slate-600">to send</span>
+                <span className="ml-2 lg:ml-3 text-slate-600">to send</span>
               </span>
               <span className="flex items-center font-medium">
-                <kbd className="px-3 py-1.5 text-xs font-bold text-slate-700 bg-gradient-to-r from-slate-100 to-slate-200 border border-slate-300/50 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+                <kbd className="px-2 lg:px-3 py-1 lg:py-1.5 text-xs font-bold text-slate-700 bg-gradient-to-r from-slate-100 to-slate-200 border border-slate-300/50 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
                   Shift
                 </kbd>
-                <span className="mx-2 text-slate-400">+</span>
-                <kbd className="px-3 py-1.5 text-xs font-bold text-slate-700 bg-gradient-to-r from-slate-100 to-slate-200 border border-slate-300/50 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+                <span className="mx-1 lg:mx-2 text-slate-400">+</span>
+                <kbd className="px-2 lg:px-3 py-1 lg:py-1.5 text-xs font-bold text-slate-700 bg-gradient-to-r from-slate-100 to-slate-200 border border-slate-300/50 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
                   Enter
                 </kbd>
-                <span className="ml-3 text-slate-600">for new line</span>
+                <span className="ml-2 lg:ml-3 text-slate-600">
+                  for new line
+                </span>
               </span>
             </div>
             <motion.div

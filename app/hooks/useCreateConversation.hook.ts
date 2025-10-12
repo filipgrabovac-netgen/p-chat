@@ -43,7 +43,7 @@ export const useCreateConversation = (): UseCreateConversationReturn => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
     onError: (error) => {
-      console.error("Failed to create conversation:", error);
+      // Error handling - could be extended with toast notifications
     },
   });
 

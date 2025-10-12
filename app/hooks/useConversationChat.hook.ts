@@ -252,7 +252,7 @@ export const useConversationChat = (
         }, 1000);
       },
       onError: (error) => {
-        console.error("Error sending message:", error);
+        // Error handling - could be extended with toast notifications
         setLoadingState(conversationId, { isLoading: false });
         setPendingRequestConversationId(null);
         // Remove the user message from local state on error

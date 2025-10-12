@@ -4,17 +4,37 @@ import { useConversations } from "@/app/hooks/useConversations.hook";
 import { useCreateConversation } from "@/app/hooks/useCreateConversation.hook";
 import { useDeleteConversation } from "@/app/hooks/useDeleteConversation.hook";
 
+// Override the OpenAPI schema type to match actual API response
+interface LastMessage {
+  content: string;
+  role: string;
+  timestamp: string;
+}
+
+interface ConversationSummary {
+  id: number;
+  user_username: string;
+  created_at: string;
+  message_count: string;
+  last_message: LastMessage | null;
+}
+
 interface ConversationsSidebarProps {
   currentConversationId?: number | null;
   onConversationSelect: (conversationId: number) => void;
+  isDragging?: boolean;
 }
 
 export const ConversationsSidebar = ({
   currentConversationId,
   onConversationSelect,
+  isDragging = false,
 }: ConversationsSidebarProps) => {
   const { conversations, total, isLoading, error, refetch } =
     useConversations();
+
+  // Cast to our local type that matches the actual API response
+  const typedConversations = conversations as unknown as ConversationSummary[];
   const { createConversation, isLoading: isCreating } = useCreateConversation();
   const { deleteConversation, isLoading: isDeleting } = useDeleteConversation();
 
@@ -24,7 +44,7 @@ export const ConversationsSidebar = ({
       // Optionally navigate to the new conversation
       onConversationSelect(newConversation.id);
     } catch (error) {
-      console.error("Failed to create new conversation:", error);
+      // Error handling - could be extended with toast notifications
     }
   };
 
@@ -36,7 +56,7 @@ export const ConversationsSidebar = ({
     try {
       await deleteConversation(conversationId);
     } catch (error) {
-      console.error("Failed to delete conversation:", error);
+      // Error handling - could be extended with toast notifications
     }
   };
 
@@ -54,7 +74,16 @@ export const ConversationsSidebar = ({
   };
 
   return (
-    <div className="w-80 bg-slate-50 border-r border-slate-200 flex flex-col h-full">
+    <div className="w-full lg:w-80 bg-slate-50 border-r border-slate-200 flex flex-col h-full rounded-t-2xl lg:rounded-none">
+      {/* Mobile drag handle */}
+      <div className="lg:hidden flex justify-center pt-3 pb-2 drag-handle">
+        <div
+          className={`w-12 h-1 rounded-full transition-colors duration-200 ${
+            isDragging ? "bg-slate-500" : "bg-slate-300"
+          }`}
+        ></div>
+      </div>
+
       {/* Header */}
       <div className="p-4 border-b border-slate-200 bg-slate-100">
         <div className="flex items-center justify-between">
@@ -74,7 +103,7 @@ export const ConversationsSidebar = ({
         <button
           onClick={handleNewConversation}
           disabled={isCreating}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
         >
           {isCreating ? (
             <svg
@@ -111,12 +140,14 @@ export const ConversationsSidebar = ({
               />
             </svg>
           )}
-          {isCreating ? "Creating..." : "New Conversation"}
+          <span className="font-medium">
+            {isCreating ? "Creating..." : "New Conversation"}
+          </span>
         </button>
       </div>
 
       {/* Conversations List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto mobile-scroll">
         <div className="p-2">
           {isLoading ? (
             <div className="space-y-2">
@@ -157,7 +188,7 @@ export const ConversationsSidebar = ({
                 </button>
               </div>
             </div>
-          ) : conversations.length === 0 ? (
+          ) : typedConversations.length === 0 ? (
             <div className="p-4 text-center">
               <div className="text-slate-500">
                 <svg
@@ -180,19 +211,19 @@ export const ConversationsSidebar = ({
               </div>
             </div>
           ) : (
-            conversations.map((conversation) => (
+            typedConversations.map((conversation) => (
               <div
                 key={conversation.id}
-                className={`w-full p-3 rounded-lg transition-colors ${
+                className={`w-full p-3 rounded-lg transition-colors touch-manipulation ${
                   currentConversationId === conversation.id
                     ? "bg-slate-200 border border-slate-300"
-                    : "hover:bg-slate-100"
+                    : "hover:bg-slate-100 active:bg-slate-150"
                 }`}
               >
                 <div className="flex items-start justify-between">
                   <button
                     onClick={() => onConversationSelect(conversation.id)}
-                    className="flex-1 min-w-0 text-left"
+                    className="flex-1 min-w-0 text-left py-1"
                   >
                     <h3 className="font-medium text-slate-900 truncate">
                       Conversation {conversation.id}
@@ -219,7 +250,7 @@ export const ConversationsSidebar = ({
                         handleDeleteConversation(conversation.id, e)
                       }
                       disabled={isDeleting}
-                      className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                       title="Delete conversation"
                     >
                       <svg
@@ -245,7 +276,7 @@ export const ConversationsSidebar = ({
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-slate-200 bg-slate-100">
+      <div className="p-4 border-t border-slate-200 bg-slate-100 mt-auto">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-slate-300 rounded-full flex items-center justify-center">
             <svg

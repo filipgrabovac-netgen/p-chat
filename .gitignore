@@ -53,3 +53,5 @@ next-env.d.ts
 /**/*.pyzw
 /**/*.pyzwz
 /**/*.pyzwzw
+# Environment variables (contains sensitive API keys)
+.env

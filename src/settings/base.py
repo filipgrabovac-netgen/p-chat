@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
@@ -168,3 +169,6 @@ CORS_ALLOW_HEADERS = [
 ]
 
 ALLOWED_HOSTS = ['*']
+
+# Google Generative AI Configuration
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')

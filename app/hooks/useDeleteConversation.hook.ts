@@ -34,7 +34,7 @@ export const useDeleteConversation = (): UseDeleteConversationReturn => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
     onError: (error) => {
-      console.error("Failed to delete conversation:", error);
+      // Error handling - could be extended with toast notifications
     },
   });
 

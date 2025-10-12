@@ -224,7 +224,7 @@ export const useSimpleConversationChat = (
         }, 500);
       },
       onError: (error) => {
-        console.error("Error sending message:", error);
+        // Error handling - could be extended with toast notifications
         setLoadingState(conversationId, { isLoading: false });
         setRequestingConversationId(null);
         // Remove the user message from local state on error

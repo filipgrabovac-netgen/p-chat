@@ -169,7 +169,7 @@ export const useChat = (conversationId?: number) => {
         }, 50);
       },
       onError: (error) => {
-        console.error("Error sending message:", error);
+        // Error handling - could be extended with toast notifications
         setIsLoading(false);
       },
     });

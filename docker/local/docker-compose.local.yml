@@ -29,11 +29,14 @@ services:
       - ./uv.lock:/app/uv.lock
       - /app/__pycache__
       - /app/.venv-docker
+    env_file:
+      - .env
     environment:
       - DEBUG=1
       - DJANGO_SETTINGS_MODULE=settings.local
       - PYTHONPATH=/app/src
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/pchat_local
+      - GOOGLE_API_KEY=AIzaSyBWR1JQ58cRNNnVgNw3knFFetQBFmcAZ_I
     command: uv run python manage.py runserver 0.0.0.0:8000
     depends_on:
       db:
@@ -53,6 +56,8 @@ services:
       - NODE_ENV=development
       - NEXT_PUBLIC_API_URL=http://localhost:8000
     command: pnpm run dev
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:

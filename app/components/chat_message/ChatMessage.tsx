@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-
 import { Message } from "../../types/chat";
+import { RichTextMessage } from "./RichTextMessage";
 
 interface ChatMessageProps {
   message: Message;
@@ -30,20 +30,19 @@ export const ChatMessage = ({
         initial={{ scale: 0.8 }}
         animate={{ scale: 1 }}
         transition={{ delay: 0.1, duration: 0.3 }}
-        className={`max-w-[85%] rounded-2xl px-5 py-4 shadow-sm ${
+        className={`max-w-[90%] lg:max-w-[85%] rounded-xl lg:rounded-2xl px-4 lg:px-5 py-3 lg:py-4 shadow-sm ${
           message.role === "user"
             ? "bg-slate-800 text-white"
             : "bg-white text-slate-900 border border-slate-100 shadow-md"
         }`}
       >
-        <div className="whitespace-pre-wrap text-base leading-relaxed font-medium">
-          {displayText}
-          {showCursor && (
-            <span className="inline-block w-0.5 h-5 bg-white ml-1 animate-pulse" />
-          )}
-        </div>
+        <RichTextMessage
+          content={displayText}
+          isUser={message.role === "user"}
+          showCursor={showCursor}
+        />
         <div
-          className={`text-xs mt-3 font-medium ${
+          className={`text-xs mt-2 lg:mt-3 font-medium ${
             message.role === "user" ? "text-slate-300" : "text-slate-500"
           }`}
         >

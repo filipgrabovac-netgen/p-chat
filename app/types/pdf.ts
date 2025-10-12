@@ -32,15 +32,15 @@ export interface PDFUploadRequest {
 export interface QuizAnswer {
   id: number;
   answer_text: string;
-  is_correct: boolean;
-  order: number;
+  is_correct?: boolean;
+  order?: number;
 }
 
 export interface QuizQuestion {
   id: number;
   question_type: "multiple_choice" | "true_false" | "short_answer";
   question_text: string;
-  order: number;
+  order?: number;
   answers: QuizAnswer[];
 }
 
@@ -48,13 +48,13 @@ export interface Quiz {
   id: number;
   user: number;
   user_username: string;
-  pdf_document: number | null;
+  pdf_document?: number | null;
   pdf_title: string | null;
   title: string;
   source_text: string;
-  difficulty_level: "easy" | "medium" | "hard";
-  num_questions: number;
-  generation_status: "pending" | "generating" | "completed" | "failed";
+  difficulty_level?: "easy" | "medium" | "hard";
+  num_questions?: number;
+  generation_status?: "pending" | "generating" | "completed" | "failed";
   questions: QuizQuestion[];
   created_at: string;
   updated_at: string;

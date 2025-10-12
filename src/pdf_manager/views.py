@@ -2,8 +2,7 @@
 ViewSets for PDF document and Quiz management
 """
 import logging
-import json
-import re
+import os
 from langchain_google_genai import GoogleGenerativeAI
 from pydantic import BaseModel
 from rest_framework import viewsets, status
@@ -14,11 +13,13 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django.contrib.auth.models import User
 from drf_spectacular.utils import extend_schema
 
+
 from .models import PDFDocument, Quiz, QuizQuestion, QuizAnswer
 from .serializers import (
     PDFDocumentSerializer,
     PDFUploadSerializer,
     PDFDocumentListSerializer,
+    QuestionGeneratorOutput,
     QuizSerializer,
     QuizGenerationRequestSerializer,
     QuizListSerializer,
@@ -160,6 +161,53 @@ class PDFDocumentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+    @extend_schema(
+        operation_id='delete_pdf',
+        summary='Delete a PDF document',
+        description='Delete a PDF document and all associated quizzes',
+        responses={
+            204: None,
+            404: ErrorResponseSerializer,
+            500: ErrorResponseSerializer,
+        },
+        tags=['PDF Documents']
+    )
+    def destroy(self, request, pk=None):
+        """Delete a PDF document and its associated file"""
+        try:
+            pdf_document = self.get_object()
+            
+            # Delete associated quizzes first
+            associated_quizzes = Quiz.objects.filter(pdf_document=pdf_document)
+            quiz_count = associated_quizzes.count()
+            associated_quizzes.delete()
+            
+            # Delete the file from storage
+            if pdf_document.file:
+                try:
+                    if os.path.isfile(pdf_document.file.path):
+                        os.remove(pdf_document.file.path)
+                        logger.info(f"Deleted file: {pdf_document.file.path}")
+                except Exception as e:
+                    logger.warning(f"Could not delete file {pdf_document.file.path}: {str(e)}")
+            
+            # Delete the PDF document record
+            pdf_document.delete()
+            
+            logger.info(f"Deleted PDF document {pk} and {quiz_count} associated quizzes")
+            return Response(status=status.HTTP_204_NO_CONTENT)
+            
+        except PDFDocument.DoesNotExist:
+            return Response(
+                {'error': 'PDF document not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            logger.error(f"Error deleting PDF document {pk}: {str(e)}")
+            return Response(
+                {'error': 'Failed to delete PDF document', 'details': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class QuizViewSet(viewsets.ModelViewSet):
@@ -253,59 +301,73 @@ class QuizViewSet(viewsets.ModelViewSet):
                 question_types=serializer.validated_data.get('question_types', ['multiple_choice'])
             )
 
-            # Generate quiz using LLM
+            # Generate quiz using LLM with structured output
             logger.info(f"Generating quiz with {quiz.num_questions} questions at {quiz.difficulty_level} difficulty")
-            llm = AWSLLMWrapper(model="gemma2:2b", stream=False)
             
-            # Invoke LLM and collect response
-            response_generator = llm.invoke_with_history([{'role': 'user', 'content': prompt}])
-            google_client = GoogleGenerativeAI(model="gemini-2.5-flash")
-            response_generator = google_client.invoke(prompt)
-            llm_response = ""
+            # Check if Google API key is configured
+            if not os.getenv('GOOGLE_API_KEY'):
+                logger.error("GOOGLE_API_KEY environment variable is not set")
+                quiz.generation_status = 'failed'
+                quiz.save()
+                return Response(
+                    {'error': f'Google API key is not configured. Please set GOOGLE_API_KEY environment variable.{os.getenv('GOOGLE_API_KEY')}'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
             
             try:
-                for chunk in response_generator:
-                    llm_response += chunk
-            except Exception as e:
-                logger.error(f"Error collecting LLM response: {str(e)}")
-                raise
-
-            logger.info(f"LLM response received, length: {len(llm_response)}")
-
-            if llm_response:
-                # Parse LLM response and create questions
-                quiz_data = self._parse_quiz_response(llm_response)
+                # Use Google Gemini with PydanticOutputParser
+                from langchain_core.output_parsers import PydanticOutputParser
                 
+                parser = PydanticOutputParser(pydantic_object=QuestionGeneratorOutput)
+                format_instructions = parser.get_format_instructions()
+                full_prompt = f"{prompt}\n\n{format_instructions}"
+                
+                logger.info("Invoking Gemini for quiz generation...")
+                google_client = GoogleGenerativeAI(model="gemini-2.5-flash")
+                llm_response = google_client.invoke(full_prompt)
+                
+                logger.info("LLM response received, parsing structured output...")
+                structured_response = parser.parse(llm_response)
+                logger.info(f"Structured response parsed with {len(structured_response.questions)} questions")
+
+                # Create questions from structured response
                 questions_created = 0
-                for idx, q_data in enumerate(quiz_data.get('questions', [])):
+                for idx, q_data in enumerate(structured_response.questions):
                     question = QuizQuestion.objects.create(
                         quiz=quiz,
-                        question_type=q_data.get('question_type', 'multiple_choice'),
-                        question_text=q_data.get('question_text', ''),
+                        question_type=q_data.question_type,
+                        question_text=q_data.question_text,
                         order=idx + 1
                     )
                     questions_created += 1
 
                     # Create answers for the question
-                    if q_data.get('question_type') == 'multiple_choice':
-                        for ans_idx, option in enumerate(q_data.get('options', [])):
+                    if q_data.question_type == 'multiple_choice':
+                        for ans_idx, option in enumerate(q_data.options):
                             QuizAnswer.objects.create(
                                 question=question,
-                                answer_text=option.get('text', ''),
-                                is_correct=(option.get('option') == q_data.get('correct_answer')),
+                                answer_text=option.text,
+                                is_correct=(option.option == q_data.correct_answer),
                                 order=ans_idx
                             )
-                    elif q_data.get('question_type') == 'true_false':
+                    elif q_data.question_type == 'true_false':
+                        # Create both True and False options for true/false questions
                         QuizAnswer.objects.create(
                             question=question,
-                            answer_text=q_data.get('correct_answer', ''),
-                            is_correct=True,
+                            answer_text='True',
+                            is_correct=(q_data.correct_answer.lower() == 'true'),
                             order=0
                         )
-                    elif q_data.get('question_type') == 'short_answer':
                         QuizAnswer.objects.create(
                             question=question,
-                            answer_text=q_data.get('correct_answer', ''),
+                            answer_text='False',
+                            is_correct=(q_data.correct_answer.lower() == 'false'),
+                            order=1
+                        )
+                    elif q_data.question_type == 'short_answer':
+                        QuizAnswer.objects.create(
+                            question=question,
+                            answer_text=q_data.correct_answer,
                             is_correct=True,
                             order=0
                         )
@@ -315,12 +377,19 @@ class QuizViewSet(viewsets.ModelViewSet):
                     logger.info(f"Quiz generation completed with {questions_created} questions")
                 else:
                     quiz.generation_status = 'failed'
-                    logger.warning("Quiz generation failed: No questions were parsed from LLM response")
-            else:
+                    logger.warning("Quiz generation failed: No questions were generated")
+                
+                quiz.save()
+                
+            except Exception as llm_error:
+                import traceback
+                error_traceback = traceback.format_exc()
+                logger.error(f"Error during LLM invocation: {str(llm_error)}")
+                logger.error(f"Traceback: {error_traceback}")
                 quiz.generation_status = 'failed'
-                logger.error("Quiz generation failed: Empty response from LLM")
-
-            quiz.save()
+                quiz.save()
+            
+                raise
 
             response_serializer = QuizSerializer(quiz)
             return Response(response_serializer.data, status=status.HTTP_201_CREATED)
@@ -336,43 +405,7 @@ class QuizViewSet(viewsets.ModelViewSet):
                 quiz.generation_status = 'failed'
                 quiz.save()
             return Response(
-                {'error': 'Failed to generate quiz', 'details': str(e)},
+                {'error': 'Failed to generate quiz', 'details': str(os.getenv('GOOGLE_API_KEY'))},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    def _parse_quiz_response(self, response_text: str) -> dict:
-        """Parse LLM response to extract quiz data"""
-        try:
-            # Try to extract JSON from the response
-            # LLM might include extra text before/after JSON
-            start_idx = response_text.find('{')
-            end_idx = response_text.rfind('}') + 1
-            
-            if start_idx != -1 and end_idx > start_idx:
-                json_str = response_text[start_idx:end_idx]
-                logger.debug(f"Extracted JSON string: {json_str[:200]}...")
-                
-                # Clean up trailing commas (common LLM mistake)
-                # Remove commas before closing brackets/braces
-                json_str = re.sub(r',\s*}', '}', json_str)  # Remove trailing commas before }
-                json_str = re.sub(r',\s*]', ']', json_str)  # Remove trailing commas before ]
-                
-                parsed_data = json.loads(json_str)
-                
-                # Validate that we have questions
-                if 'questions' in parsed_data and isinstance(parsed_data['questions'], list):
-                    logger.info(f"Successfully parsed {len(parsed_data['questions'])} questions from LLM response")
-                    return parsed_data
-                else:
-                    logger.warning("Parsed JSON does not contain 'questions' list")
-                    return {'questions': []}
-            
-            # If no valid JSON found, return empty structure
-            logger.error("No JSON structure found in LLM response")
-            logger.debug(f"Response text: {response_text[:500]}...")
-            return {'questions': []}
-        
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse quiz response as JSON: {str(e)}")
-            logger.debug(f"Attempted to parse: {response_text[:500]}...")
-            return {'questions': []}

@@ -1,3 +1,4 @@
+from pydantic import BaseModel
 from rest_framework import serializers
 from .models import PDFDocument, Quiz, QuizQuestion, QuizAnswer
 
@@ -171,3 +172,22 @@ class ErrorResponseSerializer(serializers.Serializer):
         help_text="Additional error details"
     )
 
+class QuizOption(BaseModel):
+    """Represents a single answer option for a multiple choice question"""
+    option: str  # A, B, C, D
+    text: str    # The actual text of the option
+
+
+class QuizQuestionData(BaseModel):
+    """Represents a single quiz question from LLM"""
+    question_number: int
+    question_type: str  # multiple_choice, true_false, short_answer
+    question_text: str
+    options: list[QuizOption] = []  # Only for multiple_choice
+    correct_answer: str
+    explanation: str = ""
+
+
+class QuestionGeneratorOutput(BaseModel):
+    """Represents the complete quiz generation output from LLM"""
+    questions: list[QuizQuestionData]

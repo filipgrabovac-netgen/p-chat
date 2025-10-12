@@ -18,7 +18,7 @@ export const ChatMessages = ({
   messagesEndRef,
 }: ChatMessagesProps) => {
   return (
-    <div className="flex-1 overflow-y-auto px-6 py-8 bg-gradient-to-b from-slate-50 to-white">
+    <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-6 lg:py-8 bg-gradient-to-b from-slate-50 to-white mobile-scroll">
       <div className="max-w-4xl mx-auto space-y-2">
         {messages.map((message) => {
           const isTyping =

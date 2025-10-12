@@ -158,9 +158,11 @@ export interface paths {
          *     Provides CRUD operations for PDF documents */
         put: operations["pdf_manager_pdfs_update"];
         post?: never;
-        /** @description ViewSet for PDF document operations
-         *     Provides CRUD operations for PDF documents */
-        delete: operations["pdf_manager_pdfs_destroy"];
+        /**
+         * Delete a PDF document
+         * @description Delete a PDF document and all associated quizzes
+         */
+        delete: operations["delete_pdf"];
         options?: never;
         head?: never;
         /** @description ViewSet for PDF document operations
@@ -913,7 +915,7 @@ export interface operations {
             };
         };
     };
-    pdf_manager_pdfs_destroy: {
+    delete_pdf: {
         parameters: {
             query?: never;
             header?: never;
@@ -931,6 +933,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
         };
     };

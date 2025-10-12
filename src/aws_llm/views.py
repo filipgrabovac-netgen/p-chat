@@ -1,25 +1,27 @@
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.utils import timezone
+from django.conf import settings
 import logging
 from drf_spectacular.utils import extend_schema, OpenApiExample
 from aws_llm.models import ChatConversation, ChatMessage
-from aws_llm.utils.llm_wrapper import AWSLLMWrapper
 from aws_llm.serializers import (
     ChatConversationSerializer,
     ChatRequestSerializer, 
     ChatResponseSerializer, 
     ErrorResponseSerializer,
     ConversationsListSerializer,
-    ConversationSummarySerializer,
-    ConversationCreateSerializer,
-    ConversationCreateResponseSerializer
 )
-from aws_llm.crud_views import ConversationCreateView, ConversationDeleteView
 
 logger = logging.getLogger(__name__)
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class ChatResponseView(APIView):
@@ -91,32 +93,65 @@ class ChatResponseView(APIView):
             stream = request_serializer.validated_data.get('stream', False)
             
             # Initialize AWS LLM client
-            client = AWSLLMWrapper(model=model, stream=stream)
+          
             
-            # Get conversation history and convert to list format
+            # Get conversation history and convert to LangChain message format
             message_queryset = ChatMessage.objects.filter(conversation=conversation).order_by('created_at')
             messages = []
+            
+            # Add system message to encourage markdown formatting
+            system_message = SystemMessage(content="""You are a helpful AI assistant. When responding, please use markdown formatting to make your responses more readable and well-structured. Use:
+
+- **Bold text** for emphasis
+- *Italic text* for subtle emphasis
+- `inline code` for code snippets
+- ```language code blocks``` for multi-line code
+- # Headers for organizing content
+- - Bullet points for lists
+- 1. Numbered lists for steps
+- > Blockquotes for important information
+- [Links](url) for references
+- Tables for structured data
+
+This will make your responses much more readable and professional.""")
+            messages.append(system_message)
+            
             for msg in message_queryset:
-                messages.append({
-                    'role': msg.role,
-                    'content': msg.message
-                })
+                if msg.role == 'user':
+                    messages.append(HumanMessage(content=msg.message))
+                elif msg.role == 'assistant':
+                    messages.append(AIMessage(content=msg.message))
             
-            # Add the new user message
-            messages.append({
-                'role': 'user',
-                'content': message
-            })
+            # Add the current user message to the conversation
+            messages.append(HumanMessage(content=message))
             
-            # Get response from AWS LLM with conversation history
-            if stream:
-                # Handle streaming response with history
-                response_generator = client.invoke_with_history(messages)
-                response_text = ''.join(response_generator)
-            else:
-                # Handle non-streaming response with history
-                response_generator = client.invoke_with_history(messages)
-                response_text = next(response_generator)
+            logger.info(f"Prepared {len(messages)} messages for conversation {conversation.id}")
+        
+            # Initialize Google Generative AI client
+            client = ChatGoogleGenerativeAI(
+                model="gemini-2.5-flash",
+                google_api_key=settings.GOOGLE_API_KEY
+            )
+            
+            # Get response from Google Generative AI with conversation history
+            try:
+                if stream:
+                    # Handle streaming response with history
+                    response_generator = client.stream(messages)
+                    response_text = ''.join([chunk.content for chunk in response_generator if hasattr(chunk, 'content')])
+                else:
+                    # Handle non-streaming response with history
+                    response = client.invoke(messages)
+                    response_text = response.content if hasattr(response, 'content') else str(response)
+                
+                logger.info(f"Successfully got response from Google Generative AI. Response length: {len(response_text)}")
+                
+            except Exception as e:
+                logger.error(f"Error invoking Google Generative AI: {str(e)}")
+                return Response(
+                    {'error': f'Error processing chat request: {str(e)}'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
             
             # Save the new user message to database
             user_message = ChatMessage.objects.create(
