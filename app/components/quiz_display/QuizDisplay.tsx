@@ -68,17 +68,17 @@ export const QuizDisplay = ({ quiz }: QuizDisplayProps) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <Card className="mb-4">
-          <CardContent className="p-6">
-            <div className="flex items-start space-x-3 mb-4">
-              <span className="flex-shrink-0 w-8 h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-medium text-sm">
+        <Card className="mb-3 sm:mb-4">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-start space-x-2 sm:space-x-3 mb-4">
+              <span className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 bg-slate-800 text-white rounded-full flex items-center justify-center font-medium text-xs sm:text-sm">
                 {question.order || 1}
               </span>
-              <div className="flex-1">
-                <p className="text-slate-900 font-medium text-lg">
+              <div className="flex-1 min-w-0">
+                <p className="text-slate-900 font-medium text-base sm:text-lg break-words">
                   {question.question_text}
                 </p>
-                <Badge variant="outline" className="mt-2">
+                <Badge variant="outline" className="mt-2 text-xs">
                   {question.question_type.replace("_", " ").toUpperCase()}
                 </Badge>
               </div>
@@ -115,20 +115,20 @@ export const QuizDisplay = ({ quiz }: QuizDisplayProps) => {
                     onClick={() => handleAnswerSelect(question.id, answer.id)}
                     disabled={showResults}
                     className={cn(
-                      "w-full p-4 h-auto justify-start text-left transition-all",
+                      "w-full p-3 sm:p-4 h-auto justify-start text-left transition-all text-sm sm:text-base",
                       bgColor,
                       borderColor,
                       textColor,
                       showResults ? "cursor-default" : "cursor-pointer"
                     )}
                   >
-                    <div className="flex items-center justify-between w-full">
-                      <span className="flex-1">{answer.answer_text}</span>
+                    <div className="flex items-center justify-between w-full gap-2">
+                      <span className="flex-1 break-words">{answer.answer_text}</span>
                       {showCorrect && (
-                        <CheckCircle className="w-6 h-6 text-green-600" />
+                        <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0" />
                       )}
                       {showIncorrect && (
-                        <XCircle className="w-6 h-6 text-red-600" />
+                        <XCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 flex-shrink-0" />
                       )}
                     </div>
                   </Button>
@@ -147,36 +147,37 @@ export const QuizDisplay = ({ quiz }: QuizDisplayProps) => {
     : 0;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <Card className="mb-6">
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle className="text-3xl font-bold text-slate-900 mb-2">
+    <div className="max-w-4xl mx-auto p-3 sm:p-6">
+      <Card className="mb-4 sm:mb-6">
+        <CardHeader className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div className="flex-1">
+              <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
                 {quiz.title}
               </CardTitle>
               {quiz.pdf_title && (
-                <p className="text-slate-600 text-sm">
+                <p className="text-slate-600 text-xs sm:text-sm">
                   Source: {quiz.pdf_title}
                 </p>
               )}
             </div>
             <Badge
               variant={getDifficultyVariant(quiz.difficulty_level || "medium")}
+              className="self-start"
             >
               {(quiz.difficulty_level || "medium").charAt(0).toUpperCase() +
                 (quiz.difficulty_level || "medium").slice(1)}
             </Badge>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center space-x-6 text-sm text-slate-600">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-sm text-slate-600">
             <span className="flex items-center space-x-2">
-              <HelpCircle className="w-5 h-5" />
+              <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>{quiz.questions.length} Questions</span>
             </span>
             <span className="flex items-center space-x-2">
-              <User className="w-5 h-5" />
+              <User className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>{quiz.user_username}</span>
             </span>
           </div>
@@ -185,22 +186,22 @@ export const QuizDisplay = ({ quiz }: QuizDisplayProps) => {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="mt-6"
+              className="mt-4 sm:mt-6"
             >
               <Card className="bg-slate-50">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-slate-600 mb-1">Your Score</p>
-                      <p className="text-3xl font-bold text-slate-900">
+                      <p className="text-xs sm:text-sm text-slate-600 mb-1">Your Score</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-slate-900">
                         {score} / {quiz.questions.length}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-slate-600 mb-1">Percentage</p>
+                      <p className="text-xs sm:text-sm text-slate-600 mb-1">Percentage</p>
                       <p
                         className={cn(
-                          "text-3xl font-bold",
+                          "text-2xl sm:text-3xl font-bold",
                           percentage >= 70
                             ? "text-green-600"
                             : percentage >= 50
@@ -220,15 +221,15 @@ export const QuizDisplay = ({ quiz }: QuizDisplayProps) => {
         </CardContent>
       </Card>
 
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {quiz.questions.map((question) => renderQuestion(question))}
       </div>
 
-      <div className="mt-6 flex justify-center">
+      <div className="mt-4 sm:mt-6 flex justify-center px-4">
         <Button
           onClick={() => setShowResults(!showResults)}
           size="lg"
-          className="px-8 py-3"
+          className="w-full sm:w-auto px-6 sm:px-8 py-3 text-sm sm:text-base"
         >
           {showResults ? "Hide Results" : "Submit & Show Results"}
         </Button>

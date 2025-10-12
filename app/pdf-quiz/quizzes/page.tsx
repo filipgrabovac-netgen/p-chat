@@ -46,15 +46,15 @@ export default function QuizzesPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-slate-900 mb-2">My Quizzes</h2>
-        <p className="text-slate-600">
+      <div className="mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">My Quizzes</h2>
+        <p className="text-slate-600 text-sm sm:text-base">
           Select a quiz to take or review results
         </p>
       </div>
 
       {isLoadingQuizzes ? (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {[...Array(3)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-4">
@@ -65,11 +65,11 @@ export default function QuizzesPage() {
           ))}
         </div>
       ) : quizzes.length === 0 ? (
-        <Card className="text-center py-12">
+        <Card className="text-center py-8 sm:py-12">
           <CardContent>
-            <HelpCircle className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-            <p className="text-slate-500 text-lg">No quizzes yet</p>
-            <p className="text-slate-400 text-sm mt-2">
+            <HelpCircle className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-slate-300" />
+            <p className="text-slate-500 text-base sm:text-lg">No quizzes yet</p>
+            <p className="text-slate-400 text-xs sm:text-sm mt-2">
               Generate a quiz from your PDFs to get started
             </p>
           </CardContent>
@@ -79,34 +79,45 @@ export default function QuizzesPage() {
           {quizzes.map((quiz) => (
             <Card
               key={quiz.id}
-              className="hover:shadow-md transition-all cursor-pointer"
+              className="hover:shadow-md transition-all cursor-pointer active:scale-[0.98]"
               onClick={() => handleSelectQuiz(quiz.id)}
             >
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg text-slate-900 mb-2">
-                      {quiz.title}
-                    </h3>
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between sm:block mb-2">
+                      <h3 className="font-semibold text-base sm:text-lg text-slate-900 flex-1 break-words pr-2">
+                        {quiz.title}
+                      </h3>
+                      <Badge
+                        variant={getStatusVariant(
+                          quiz.generation_status || "pending"
+                        )}
+                        className="sm:hidden flex-shrink-0"
+                      >
+                        {quiz.generation_status}
+                      </Badge>
+                    </div>
                     {quiz.pdf_title && (
-                      <p className="text-sm text-slate-600 mb-2">
+                      <p className="text-xs sm:text-sm text-slate-600 mb-2 truncate">
                         Source: {quiz.pdf_title}
                       </p>
                     )}
-                    <div className="flex items-center space-x-4 text-sm text-slate-600">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-slate-600">
                       <span>{quiz.question_count} questions</span>
-                      <span>•</span>
+                      <span className="hidden sm:inline">•</span>
                       <span className="capitalize">
                         {quiz.difficulty_level}
                       </span>
-                      <span>•</span>
-                      <span>{formatDate(quiz.created_at || "")}</span>
+                      <span className="hidden sm:inline">•</span>
+                      <span className="text-xs">{formatDate(quiz.created_at || "")}</span>
                     </div>
                   </div>
                   <Badge
                     variant={getStatusVariant(
                       quiz.generation_status || "pending"
                     )}
+                    className="hidden sm:inline-flex flex-shrink-0"
                   >
                     {quiz.generation_status}
                   </Badge>

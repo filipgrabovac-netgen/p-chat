@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "export",
+  // Disable static export for dynamic routes in development
+  // For production, we'll use standalone output
+  output: process.env.NODE_ENV === "production" ? "standalone" : undefined,
   // trailingSlash generates cleaner directory structure with index.html files
   trailingSlash: true,
   images: {
