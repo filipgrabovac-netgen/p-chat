@@ -16,30 +16,29 @@ def serve_frontend(request, path=''):
     project_root = settings.BASE_DIR.parent
     out_dir = os.path.join(project_root, 'out')
     
-    # Remove leading/trailing slashes for consistency
+    # Clean up the path
     path = path.strip('/')
     
-    # Try different file path variations for Next.js static export with trailingSlash: true
-    # 1. Try path/index.html (most common for Next.js with trailingSlash)
+    # Try to serve the specific file first (for assets, etc.)
     if path:
-        file_path = os.path.join(out_dir, path, 'index.html')
-    else:
-        file_path = os.path.join(out_dir, 'index.html')
-    
-    # 2. If not found, try path.html
-    if not os.path.exists(file_path) and path:
-        file_path = os.path.join(out_dir, path + '.html')
-    
-    # 3. If not found, try exact path (for files like favicon.ico, etc.)
-    if not os.path.exists(file_path) and path:
         file_path = os.path.join(out_dir, path)
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            content_type, _ = mimetypes.guess_type(file_path)
+            return FileResponse(open(file_path, 'rb'), content_type=content_type)
     
-    # If the file exists and is a file, serve it
-    if os.path.exists(file_path) and os.path.isfile(file_path):
-        content_type, _ = mimetypes.guess_type(file_path)
-        return FileResponse(open(file_path, 'rb'), content_type=content_type)
+    # For all other routes, try to serve the appropriate index.html
+    # This handles both static routes and dynamic routes
+    if path:
+        # Try path/index.html (Next.js with trailingSlash: true)
+        index_path = os.path.join(out_dir, path, 'index.html')
+    else:
+        # Root path
+        index_path = os.path.join(out_dir, 'index.html')
     
-    # If nothing found, serve the root index.html (for client-side routing)
+    if os.path.exists(index_path):
+        return FileResponse(open(index_path, 'rb'), content_type='text/html')
+    
+    # Fallback to root index.html for client-side routing
     root_index = os.path.join(out_dir, 'index.html')
     if os.path.exists(root_index):
         return FileResponse(open(root_index, 'rb'), content_type='text/html')

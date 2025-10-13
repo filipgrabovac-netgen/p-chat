@@ -47,7 +47,9 @@ export default function QuizzesPage() {
       transition={{ duration: 0.3 }}
     >
       <div className="mb-4 sm:mb-6">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">My Quizzes</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">
+          My Quizzes
+        </h2>
         <p className="text-slate-600 text-sm sm:text-base">
           Select a quiz to take or review results
         </p>
@@ -68,7 +70,9 @@ export default function QuizzesPage() {
         <Card className="text-center py-8 sm:py-12">
           <CardContent>
             <HelpCircle className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-slate-300" />
-            <p className="text-slate-500 text-base sm:text-lg">No quizzes yet</p>
+            <p className="text-slate-500 text-base sm:text-lg">
+              No quizzes yet
+            </p>
             <p className="text-slate-400 text-xs sm:text-sm mt-2">
               Generate a quiz from your PDFs to get started
             </p>
@@ -110,7 +114,9 @@ export default function QuizzesPage() {
                         {quiz.difficulty_level}
                       </span>
                       <span className="hidden sm:inline">•</span>
-                      <span className="text-xs">{formatDate(quiz.created_at || "")}</span>
+                      <span className="text-xs">
+                        {formatDate(quiz.created_at || "")}
+                      </span>
                     </div>
                   </div>
                   <Badge
