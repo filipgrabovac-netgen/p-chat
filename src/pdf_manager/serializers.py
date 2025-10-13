@@ -81,13 +81,16 @@ class QuizSerializer(serializers.ModelSerializer):
     questions = QuizQuestionSerializer(many=True, read_only=True)
     user_username = serializers.CharField(source='user.username', read_only=True)
     pdf_title = serializers.CharField(source='pdf_document.title', read_only=True, allow_null=True)
+    folder_name = serializers.CharField(source='folder.name', read_only=True, allow_null=True)
+    folder_color = serializers.CharField(source='folder.color', read_only=True, allow_null=True)
     
     class Meta:
         model = Quiz
         fields = [
             'id', 'user', 'user_username', 'pdf_document', 'pdf_title',
-            'title', 'source_text', 'difficulty_level', 'num_questions',
-            'generation_status', 'questions', 'created_at', 'updated_at'
+            'folder', 'folder_name', 'folder_color', 'title', 'source_text', 
+            'difficulty_level', 'num_questions', 'generation_status', 
+            'questions', 'created_at', 'updated_at'
         ]
         read_only_fields = [
             'id', 'user', 'generation_status', 'created_at', 'updated_at'
@@ -98,13 +101,15 @@ class QuizListSerializer(serializers.ModelSerializer):
     """Serializer for listing quizzes (summary view)"""
     user_username = serializers.CharField(source='user.username', read_only=True)
     pdf_title = serializers.CharField(source='pdf_document.title', read_only=True, allow_null=True)
+    folder_name = serializers.CharField(source='folder.name', read_only=True, allow_null=True)
+    folder_color = serializers.CharField(source='folder.color', read_only=True, allow_null=True)
     question_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Quiz
         fields = [
-            'id', 'user_username', 'pdf_title', 'title',
-            'difficulty_level', 'num_questions', 'question_count',
+            'id', 'user_username', 'pdf_title', 'folder', 'folder_name', 'folder_color',
+            'title', 'difficulty_level', 'num_questions', 'question_count',
             'generation_status', 'created_at'
         ]
     
@@ -145,11 +150,17 @@ class QuizGenerationRequestSerializer(serializers.Serializer):
         default=['multiple_choice', 'true_false'],
         help_text="Types of questions to generate"
     )
+    folder = serializers.IntegerField(
+        required=False,
+        allow_null=True,
+        help_text="ID of the folder to assign this quiz to"
+    )
 
     def validate(self, data):
         """Validate that either pdf_document_id or source_text is provided"""
         pdf_id = data.get('pdf_document_id')
         source_text = data.get('source_text')
+        folder_id = data.get('folder')
         
         if not pdf_id and not source_text:
             raise serializers.ValidationError(
@@ -160,6 +171,17 @@ class QuizGenerationRequestSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 "Cannot provide both 'pdf_document_id' and 'source_text'"
             )
+        
+        # Validate folder if provided
+        if folder_id:
+            from folders.models import Folder
+            try:
+                folder = Folder.objects.get(id=folder_id, user_id=1)  # TODO: Use proper auth
+                data['folder'] = folder
+            except Folder.DoesNotExist:
+                raise serializers.ValidationError(
+                    f"Folder with id {folder_id} does not exist or does not belong to the user"
+                )
         
         return data
 

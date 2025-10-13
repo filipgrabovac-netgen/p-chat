@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'aws_llm',
     'pdf_manager',
+    'folders',
 ]
 
 MIDDLEWARE = [

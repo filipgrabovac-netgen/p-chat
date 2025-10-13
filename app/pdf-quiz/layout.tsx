@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText, HelpCircle } from "lucide-react";
+import { Upload, FileText, HelpCircle, Folder } from "lucide-react";
 import { cn } from "@/app/utils/cn";
 
 export default function PDFQuizLayout({
@@ -31,6 +31,12 @@ export default function PDFQuizLayout({
       label: "My Quizzes",
       href: "/pdf-quiz/quizzes",
       icon: <HelpCircle className="w-5 h-5" />,
+    },
+    {
+      id: "folders",
+      label: "Folders",
+      href: "/pdf-quiz/folders",
+      icon: <Folder className="w-5 h-5" />,
     },
   ];
 
@@ -80,7 +86,12 @@ export default function PDFQuizLayout({
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
+      <div
+        className={cn(
+          "max-w-7xl mx-auto py-4 sm:py-8",
+          pathname === "/pdf-quiz/folders" ? "px-0 sm:px-6" : "p-4 sm:px-6"
+        )}
+      >
         {children}
       </div>
     </div>

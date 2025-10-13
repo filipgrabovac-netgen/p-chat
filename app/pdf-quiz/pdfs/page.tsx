@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PDFList } from "../../components/pdf_list/PDFList";
+import { FolderSelector } from "../../components/folder_selector/FolderSelector";
 import { usePDFList } from "../../hooks/usePDFList.hook";
+import { useFolders } from "../../hooks/useFolders.hook";
 import { useQuizGeneration } from "../../hooks/useQuizGeneration.hook";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,9 +28,11 @@ export default function PDFsPage() {
   const [quizGenerationSettings, setQuizGenerationSettings] = useState({
     difficulty: "medium" as "easy" | "medium" | "hard",
     numQuestions: 5,
+    folder: null as number | null,
   });
 
   const { pdfs, isLoading: isLoadingPDFs } = usePDFList();
+  const { folders } = useFolders();
   const { generateQuiz } = useQuizGeneration();
 
   const handleGenerateQuiz = async (pdfId: number) => {
@@ -40,6 +44,7 @@ export default function PDFsPage() {
         difficulty_level: quizGenerationSettings.difficulty,
         num_questions: quizGenerationSettings.numQuestions,
         question_types: ["multiple_choice", "true_false"],
+        folder: quizGenerationSettings.folder,
       });
       router.push(`/pdf-quiz/quiz/${quiz.id}`);
     } catch (error) {
@@ -73,7 +78,7 @@ export default function PDFsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label
                   htmlFor="difficulty"
@@ -121,6 +126,27 @@ export default function PDFsPage() {
                   }
                   className="mt-2"
                 />
+              </div>
+              <div>
+                <Label
+                  htmlFor="folder"
+                  className="text-sm font-medium text-slate-700"
+                >
+                  Folder
+                </Label>
+                <div className="mt-2">
+                  <FolderSelector
+                    folders={folders}
+                    selectedFolderId={quizGenerationSettings.folder}
+                    onFolderChange={(folderId) =>
+                      setQuizGenerationSettings((prev) => ({
+                        ...prev,
+                        folder: folderId,
+                      }))
+                    }
+                    placeholder="Select folder (optional)"
+                  />
+                </div>
               </div>
             </div>
           </CardContent>

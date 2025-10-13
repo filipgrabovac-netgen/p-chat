@@ -102,11 +102,26 @@ export default function QuizzesPage() {
                         {quiz.generation_status}
                       </Badge>
                     </div>
-                    {quiz.pdf_title && (
-                      <p className="text-xs sm:text-sm text-slate-600 mb-2 truncate">
-                        Source: {quiz.pdf_title}
-                      </p>
-                    )}
+                    <div className="mb-2 space-y-1">
+                      {quiz.pdf_title && (
+                        <p className="text-xs sm:text-sm text-slate-600 truncate">
+                          Source: {quiz.pdf_title}
+                        </p>
+                      )}
+                      {quiz.folder_name && (
+                        <div className="flex items-center space-x-2">
+                          <div
+                            className="w-3 h-3 rounded-full flex-shrink-0"
+                            style={{
+                              backgroundColor: quiz.folder_color || "#3B82F6",
+                            }}
+                          />
+                          <p className="text-xs sm:text-sm text-slate-600 truncate">
+                            Folder: {quiz.folder_name}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-slate-600">
                       <span>{quiz.question_count} questions</span>
                       <span className="hidden sm:inline">•</span>

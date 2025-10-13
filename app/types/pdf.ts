@@ -50,6 +50,9 @@ export interface Quiz {
   user_username: string;
   pdf_document?: number | null;
   pdf_title: string | null;
+  folder?: number | null;
+  folder_name?: string | null;
+  folder_color?: string | null;
   title: string;
   source_text: string;
   difficulty_level?: "easy" | "medium" | "hard";
@@ -64,6 +67,9 @@ export interface QuizListItem {
   id: number;
   user_username: string;
   pdf_title: string | null;
+  folder?: number | null;
+  folder_name?: string | null;
+  folder_color?: string | null;
   title: string;
   difficulty_level: "easy" | "medium" | "hard";
   num_questions: number;
@@ -79,4 +85,5 @@ export interface QuizGenerationRequest {
   difficulty_level: "easy" | "medium" | "hard";
   num_questions: number;
   question_types: Array<"multiple_choice" | "true_false" | "short_answer">;
+  folder?: number | null;
 }

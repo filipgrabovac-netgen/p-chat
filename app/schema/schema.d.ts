@@ -124,6 +124,82 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/folders/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List all folders
+         * @description Get a list of all folders for the authenticated user
+         */
+        get: operations["list_folders"];
+        put?: never;
+        /**
+         * Create a new folder
+         * @description Create a new folder for organizing quizzes
+         */
+        post: operations["create_folder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/folders/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get folder details
+         * @description Get detailed information about a specific folder
+         */
+        get: operations["get_folder"];
+        /**
+         * Update folder
+         * @description Update folder information
+         */
+        put: operations["update_folder"];
+        post?: never;
+        /**
+         * Delete folder
+         * @description Delete a folder. Quizzes in this folder will have their folder set to null.
+         */
+        delete: operations["delete_folder"];
+        options?: never;
+        head?: never;
+        /**
+         * Partially update folder
+         * @description Partially update folder information
+         */
+        patch: operations["partial_update_folder"];
+        trace?: never;
+    };
+    "/api/folders/{id}/quizzes/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get quizzes in folder
+         * @description Get all quizzes that belong to a specific folder
+         */
+        get: operations["get_folder_quizzes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/pdf-manager/pdfs/": {
         parameters: {
             query?: never;
@@ -377,6 +453,41 @@ export interface components {
              */
             timestamp: string;
         };
+        /** @description Serializer for folders with computed fields */
+        Folder: {
+            readonly id: number;
+            name: string;
+            description?: string | null;
+            color?: string;
+            icon?: string | null;
+            parent?: number | null;
+            readonly quizzes_count: string;
+            readonly children_count: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /** @description Serializer for creating and updating folders */
+        FolderCreateUpdateRequest: {
+            name: string;
+            description?: string | null;
+            color?: string;
+            icon?: string | null;
+            parent?: number | null;
+        };
+        /** @description Simplified serializer for folder listing */
+        FolderList: {
+            readonly id: number;
+            name: string;
+            description?: string | null;
+            color?: string;
+            icon?: string | null;
+            parent?: number | null;
+            readonly quizzes_count: string;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
         /**
          * @description * `pending` - Pending
          *     * `generating` - Generating
@@ -410,8 +521,12 @@ export interface components {
             readonly id: number;
             readonly user_username: string;
             title: string;
-            /** @description File size in bytes */
+            /**
+             * Format: int64
+             * @description File size in bytes
+             */
             file_size: number;
+            /** Format: int64 */
             page_count?: number;
             processing_status?: components["schemas"]["ProcessingStatusEnum"];
             readonly quiz_count: string;
@@ -433,6 +548,21 @@ export interface components {
             file: string;
             /** @description Optional title for the PDF document */
             title?: string;
+        };
+        PaginatedFolderListList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["FolderList"][];
         };
         PaginatedPDFDocumentListList: {
             /** @example 123 */
@@ -464,6 +594,14 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["QuizList"][];
         };
+        /** @description Serializer for creating and updating folders */
+        PatchedFolderCreateUpdateRequest: {
+            name?: string;
+            description?: string | null;
+            color?: string;
+            icon?: string | null;
+            parent?: number | null;
+        };
         /** @description Serializer for PDF documents */
         PatchedPDFDocumentRequest: {
             title?: string;
@@ -473,10 +611,12 @@ export interface components {
         /** @description Serializer for quizzes */
         PatchedQuizRequest: {
             pdf_document?: number | null;
+            folder?: number | null;
             title?: string;
             /** @description Text used to generate quiz */
             source_text?: string;
             difficulty_level?: components["schemas"]["DifficultyLevel9d4Enum"];
+            /** Format: int64 */
             num_questions?: number;
         };
         /**
@@ -508,10 +648,14 @@ export interface components {
             readonly user_username: string;
             pdf_document?: number | null;
             readonly pdf_title: string | null;
+            folder?: number | null;
+            readonly folder_name: string | null;
+            readonly folder_color: string | null;
             title: string;
             /** @description Text used to generate quiz */
             source_text: string;
             difficulty_level?: components["schemas"]["DifficultyLevel9d4Enum"];
+            /** Format: int64 */
             num_questions?: number;
             readonly generation_status: components["schemas"]["GenerationStatusEnum"];
             readonly questions: components["schemas"]["QuizQuestion"][];
@@ -525,12 +669,14 @@ export interface components {
             readonly id: number;
             answer_text: string;
             is_correct?: boolean;
+            /** Format: int64 */
             order?: number;
         };
         /** @description Serializer for quiz answers */
         QuizAnswerRequest: {
             answer_text: string;
             is_correct?: boolean;
+            /** Format: int64 */
             order?: number;
         };
         /**
@@ -573,14 +719,20 @@ export interface components {
              *     ]
              */
             question_types: components["schemas"]["QuestionTypesEnum"][];
+            /** @description ID of the folder to assign this quiz to */
+            folder?: number | null;
         };
         /** @description Serializer for listing quizzes (summary view) */
         QuizList: {
             readonly id: number;
             readonly user_username: string;
             readonly pdf_title: string | null;
+            folder?: number | null;
+            readonly folder_name: string | null;
+            readonly folder_color: string | null;
             title: string;
             difficulty_level?: components["schemas"]["DifficultyLevel9d4Enum"];
+            /** Format: int64 */
             num_questions?: number;
             readonly question_count: string;
             generation_status?: components["schemas"]["GenerationStatusEnum"];
@@ -592,6 +744,7 @@ export interface components {
             readonly id: number;
             question_type: components["schemas"]["QuestionTypeEnum"];
             question_text: string;
+            /** Format: int64 */
             order?: number;
             readonly answers: components["schemas"]["QuizAnswer"][];
         };
@@ -599,15 +752,18 @@ export interface components {
         QuizQuestionRequest: {
             question_type: components["schemas"]["QuestionTypeEnum"];
             question_text: string;
+            /** Format: int64 */
             order?: number;
         };
         /** @description Serializer for quizzes */
         QuizRequest: {
             pdf_document?: number | null;
+            folder?: number | null;
             title: string;
             /** @description Text used to generate quiz */
             source_text: string;
             difficulty_level?: components["schemas"]["DifficultyLevel9d4Enum"];
+            /** Format: int64 */
             num_questions?: number;
         };
     };
@@ -816,6 +972,239 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_folders: {
+        parameters: {
+            query?: {
+                /** @description A page number within the paginated result set. */
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedFolderListList"];
+                };
+            };
+        };
+    };
+    create_folder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FolderCreateUpdateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["FolderCreateUpdateRequest"];
+                "multipart/form-data": components["schemas"]["FolderCreateUpdateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Folder"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_folder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this folder. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Folder"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    update_folder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this folder. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FolderCreateUpdateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["FolderCreateUpdateRequest"];
+                "multipart/form-data": components["schemas"]["FolderCreateUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Folder"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    delete_folder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this folder. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    partial_update_folder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this folder. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedFolderCreateUpdateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedFolderCreateUpdateRequest"];
+                "multipart/form-data": components["schemas"]["PatchedFolderCreateUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Folder"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_folder_quizzes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this folder. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
         };

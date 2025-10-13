@@ -228,9 +228,20 @@ class QuizViewSet(viewsets.ModelViewSet):
         return QuizSerializer
 
     def get_queryset(self):
-        """Filter quizzes by user (hardcoded to user ID 1 for now)"""
+        """Filter quizzes by user and optionally by folder"""
         # TODO: Replace with proper authentication
-        return Quiz.objects.filter(user_id=1).order_by('-created_at')
+        queryset = Quiz.objects.filter(user_id=1).order_by('-created_at')
+        
+        # Filter by folder if provided
+        folder_id = self.request.query_params.get('folder', None)
+        if folder_id:
+            try:
+                queryset = queryset.filter(folder_id=folder_id)
+            except ValueError:
+                # Invalid folder_id format
+                pass
+        
+        return queryset
 
     @extend_schema(
         operation_id='generate_quiz',
@@ -286,6 +297,7 @@ class QuizViewSet(viewsets.ModelViewSet):
             quiz = Quiz.objects.create(
                 user=user,
                 pdf_document=pdf_document,
+                folder=serializer.validated_data.get('folder'),
                 title=serializer.validated_data.get('title', 'Generated Quiz'),
                 source_text=source_text[:1000],  # Store first 1000 chars
                 difficulty_level=serializer.validated_data.get('difficulty_level', 'medium'),
@@ -310,7 +322,7 @@ class QuizViewSet(viewsets.ModelViewSet):
                 quiz.generation_status = 'failed'
                 quiz.save()
                 return Response(
-                    {'error': f'Google API key is not configured. Please set GOOGLE_API_KEY environment variable.{os.getenv('GOOGLE_API_KEY')}'},
+                    {'error': 'Google API key is not configured. Please set GOOGLE_API_KEY environment variable.'},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
             

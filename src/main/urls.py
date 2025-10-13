@@ -9,6 +9,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/aws-llm/', include('aws_llm.urls')),
     path('api/pdf-manager/', include('pdf_manager.urls')),
+    path('api/folders/', include('folders.urls')),
     
     # Swagger/OpenAPI documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

@@ -41,6 +41,13 @@ class Quiz(models.Model):
         null=True,
         blank=True
     )
+    folder = models.ForeignKey(
+        'folders.Folder',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='quizzes'
+    )
     title = models.CharField(max_length=255)
     source_text = models.TextField(help_text="Text used to generate quiz")
     difficulty_level = models.CharField(
